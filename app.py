@@ -75,7 +75,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if "active_nav" not in st.session_state:
-    st.session_state.active_nav = "Tableau de bord"
+    st.session_state.active_nav = "Assistant"
 
 
 # ==============================================================================
@@ -441,8 +441,8 @@ with st.sidebar:
     st.markdown("---")
 
     nav_options = [
-        "Tableau de bord",
         "Assistant",
+        "Tableau de bord",
         "Documents & Factures",
         "Outils externes"
     ]
