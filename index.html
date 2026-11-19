@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ÉCHAP — L'assistant qui libère les entrepreneurs de la paperasse</title>
+  <meta name="description" content="L'assistant administratif et financier autonome pour les entrepreneurs et dirigeants en France. Facturation Factur-X 2026, déclarations URSSAF & TVA, rapprochement bancaire et rigueur déterministe.">
+  <link rel="icon" type="image/svg+xml" href="assets/brand/favicon.svg">
+
+  <!-- Polices Officielles de la Charte ÉCHAP -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* Palette Fondamentale ÉCHAP (docs/marque.md & brand.json) */
+      --color-primary-black: #09090B;
+      --color-primary-surface: #18181B;
+      --color-primary-border: #27272A;
+      --color-secondary-white: #FFFFFF;
+
+      /* Couleur secondaire d'émancipation : Orange Ambre Solaire */
+      --color-accent: #EA580C;
+      --color-accent-hover: #C2410C;
+      --color-accent-light: #FFF7ED;
+      --color-accent-border: #FFEDD5;
+
+      /* Neutres de surface */
+      --color-bg-page: #F8FAFC;
+      --color-bg-card: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-border-subtle: #F1F5F9;
+      --color-text-main: #09090B;
+      --color-text-secondary: #71717A;
+      --color-text-muted: #A1A1AA;
+
+      /* Statuts réglementaires stricts (EX-14) */
+      --status-success-bg: #ECFDF5;
+      --status-success-border: #A7F3D0;
+      --status-success-text: #047857;
+
+      --status-warning-bg: #FFFBEB;
+      --status-warning-border: #FDE68A;
+      --status-warning-text: #B45309;
+
+      --status-danger-bg: #FEF2F2;
+      --status-danger-border: #FECACA;
+      --status-danger-text: #B91C1C;
+
+      --status-info-bg: #EFF6FF;
+      --status-info-border: #BFDBFE;
+      --status-info-text: #1D4ED8;
+
+      /* Typographie */
+      --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+
+      /* Ombres */
+      --shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(9, 9, 11, 0.06), 0 2px 4px -2px rgba(9, 9, 11, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(9, 9, 11, 0.08), 0 4px 6px -4px rgba(9, 9, 11, 0.03);
+    }
+
+    /* Reset & Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-bg-page);
+      color: var(--color-text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    .tnum {
+      font-family: var(--font-mono);
+      font-feature-settings: "tnum" 1, "zero" 1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation Header */
+    header.site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      transition: all 0.2s ease;
+    }
+
+    .nav-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .brand-logo-link {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      gap: 12px;
+    }
+
+    .brand-logo-img {
+      height: 40px;
+      width: auto;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--color-primary-black);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .badge-reform {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-accent-light);
+      border: 1px solid var(--color-accent-border);
+      color: var(--color-accent);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 9999px;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-accent);
+      border-radius: 50%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--color-primary-black);
+      color: var(--color-secondary-white);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:hover {
+      background: #27272A;
+      transform: translateY(-1px);
+    }
+
+    .btn-accent {
+      background: var(--color-accent);
+      color: var(--color-secondary-white);
+      box-shadow: 0 2px 8px rgba(234, 88, 12, 0.25);
+    }
+
+    .btn-accent:hover {
+      background: var(--color-accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+    }
+
+    .btn-outline {
+      background: #FFFFFF;
+      border-color: var(--color-border);
+      color: var(--color-primary-black);
+    }
+
+    .btn-outline:hover {
+      background: #F8FAFC;
+      border-color: #CBD5E1;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .btn-lg {
+      padding: 14px 26px;
+      font-size: 15px;
+      border-radius: 10px;
+    }
+
+    .keycap-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      background: #18181B;
+      color: #FFFFFF;
+      padding: 3px 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+      border-top: 1px solid #3F3F46;
+      border-bottom: 2px solid #000000;
+      letter-spacing: -0.02em;
+    }
+
+    /* =========================================================================
+       HERO SECTION
+       ========================================================================= */
+    section.hero {
+      padding: 72px 0 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-content {
+      text-align: center;
+      max-width: 860px;
+      margin: 0 auto 40px;
+    }
+
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(34px, 5.2vw, 54px);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: var(--color-primary-black);
+      margin-bottom: 20px;
+    }
+
+    .hero-title .text-gradient {
+      background: linear-gradient(135deg, #09090B 30%, #EA580C 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(17px, 2.2vw, 20px);
+      line-height: 1.55;
+      color: var(--color-text-secondary);
+      margin-bottom: 30px;
+      font-weight: 400;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* Clavier Tactile Échap interactif */
+    .hero-keycap-showcase {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 28px 0 10px;
+    }
+
+    .mac-esc-button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.1s ease;
+      outline: none;
+    }
+
+    .mac-esc-button:active, .mac-esc-button.pressed {
+      transform: translateY(3px) scale(0.98);
+    }
+
+    .keycap-interactive-box {
+      width: 130px;
+      height: 86px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #27272A 0%, #18181B 70%, #09090B 100%);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.2);
+      position: relative;
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    .keycap-interactive-top {
+      width: 100%;
+      height: 100%;
+      border-radius: 11px;
+      background: linear-gradient(180deg, #3F3F46 0%, #27272A 25%, #18181B 85%, #09090B 100%);
+      border: 1px solid rgba(82, 82, 91, 0.45);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px 14px;
+    }
+
+    .keycap-interactive-top::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 14px;
+      right: 14px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .keycap-interactive-legend {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.02em;
+    }
+
+    .keycap-interactive-hint {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-top: 10px;
+      letter-spacing: 0.02em;
+    }
+
+    /* =========================================================================
+       INTERACTIVE APP COCKPIT PREVIEW
+       ========================================================================= */
+    .cockpit-wrapper {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      margin: 32px auto 0;
+      max-width: 1120px;
+    }
+
+    .window-header {
+      background: #18181B;
+      color: #FFFFFF;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #27272A;
+    }
+
+    .window-traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .window-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .window-dot.close { background: #EF4444; }
+    .window-dot.min { background: #F59E0B; }
+    .window-dot.max { background: #10B981; }
+
+    .window-title {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      font-weight: 500;
+      color: #A1A1AA;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .profile-tabs-bar {
+      background: #F8FAFC;
+      border-bottom: 1px solid var(--color-border);
+      padding: 8px 16px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+
+    .profile-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .profile-tab-btn.active {
+      background: #FFFFFF;
+      border-color: var(--color-border);
+      color: var(--color-primary-black);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cockpit-split {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      min-height: 480px;
+    }
+
+    @media (max-width: 960px) {
+      .cockpit-split {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chat-pane {
+      background: #FFFFFF;
+      border-right: 1px solid var(--color-border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+      margin-bottom: 20px;
+    }
+
+    .assistant-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .assistant-avatar {
+      width: 32px;
+      height: 22px;
+      background: #09090B;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      border: 1px solid #27272A;
+    }
+
+    .chat-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .message {
+      max-width: 90%;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      color: var(--color-primary-black);
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background: #18181B;
+      color: #FFFFFF;
+    }
+
+    .action-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .chip-btn {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-primary-black);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s ease;
+    }
+
+    .chip-btn:hover {
+      background: #F1F5F9;
+      border-color: #CBD5E1;
+    }
+
+    .chip-btn.confirm {
+      background: var(--color-accent);
+      color: #FFFFFF;
+      border-color: var(--color-accent);
+    }
+
+    .chip-btn.confirm:hover {
+      background: var(--color-accent-hover);
+    }
+
+    .chat-input-bar {
+      margin-top: 20px;
+      display: flex;
+      gap: 8px;
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 8px 12px;
+      background: #F8FAFC;
+    }
+
+    .chat-input-bar input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--color-primary-black);
+    }
+
+    .dashboard-pane {
+      background: #FAFAFA;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .dash-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .dash-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .dash-card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-status.valid {
+      background: var(--status-success-bg);
+      border: 1px solid var(--status-success-border);
+      color: var(--status-success-text);
+    }
+
+    .badge-status.warn {
+      background: var(--status-warning-bg);
+      border: 1px solid var(--status-warning-border);
+      color: var(--status-warning-text);
+    }
+
+    .metric-big {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      line-height: 1.2;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .fec-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border-subtle);
+      font-size: 13px;
+    }
+
+    .fec-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    /* =========================================================================
+       SECTION 4 PILIERS
+       ========================================================================= */
+    section.pillars {
+      padding: 90px 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .section-head {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 56px;
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--color-primary-black);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 17px;
+      color: var(--color-text-secondary);
+    }
+
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+
+    .pillar-card {
+      background: var(--color-bg-page);
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      padding: 32px 24px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      border-color: #CBD5E1;
+      background: #FFFFFF;
+      box-shadow: var(--shadow-md);
+    }
+
+    .pillar-icon-box {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      background: #09090B;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .pillar-title {
+      font-family: var(--font-display);
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      margin-bottom: 12px;
+    }
+
+    .pillar-text {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      flex: 1;
+    }
+
+    .pillar-refusal {
+      border-top: 1px solid var(--color-border);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      display: flex;
+      gap: 6px;
+    }
+
+    .pillar-refusal strong {
+      color: #B91C1C;
+    }
+
+    /* =========================================================================
+       SECTION LABORATOIRE / SIMULATEUR INTERACTIF
+       ========================================================================= */
+    section.simulator {
+      padding: 90px 0;
+      background: var(--color-bg-page);
+    }
+
+    .simulator-box {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .simulator-nav {
+      display: flex;
+      background: #F1F5F9;
+      border-bottom: 1px solid var(--color-border);
+      overflow-x: auto;
+    }
+
+    .sim-tab-btn {
+      flex: 1;
+      padding: 16px 20px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      border-bottom: 2px solid transparent;
+    }
+
+    .sim-tab-btn.active {
+      background: #FFFFFF;
+      color: var(--color-primary-black);
+      border-bottom-color: var(--color-accent);
+    }
+
+    .sim-panel {
+      padding: 36px 32px;
+      display: none;
+    }
+
+    .sim-panel.active {
+      display: block;
+    }
+
+    .sim-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .sim-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sim-field {
+      margin-bottom: 18px;
+    }
+
+    .sim-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-main);
+      margin-bottom: 6px;
+    }
+
+    .sim-input, .sim-select {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      font-family: var(--font-body);
+      font-size: 14px;
+      background: #FFFFFF;
+      color: var(--color-primary-black);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .sim-input:focus, .sim-select:focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    }
+
+    .sim-card-result {
+      background: #09090B;
+      color: #FFFFFF;
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sim-result-head {
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .sim-result-amount {
+      font-size: 32px;
+      font-weight: 700;
+      color: #FFFFFF;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+
+    .sim-result-list {
+      list-style: none;
+      margin: 16px 0;
+      font-size: 13px;
+      color: #A1A1AA;
+    }
+
+    .sim-result-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #27272A;
+    }
+
+    .sim-result-list li:last-child {
+      border-bottom: none;
+    }
+
+    .sim-result-list strong {
+      color: #FFFFFF;
+    }
+
+    /* =========================================================================
+       SECTION PROFILS ÉLIGIBLES
+       ========================================================================= */
+    section.profiles {
+      padding: 90px 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .profiles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .profile-card {
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 24px;
+      background: #FFFFFF;
+      position: relative;
+    }
+
+    .profile-card.included {
+      border-top: 3px solid var(--color-accent);
+    }
+
+    .profile-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      background: var(--status-success-bg);
+      color: var(--status-success-text);
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .profile-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      margin-bottom: 8px;
+    }
+
+    .profile-summary {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .profile-checklist {
+      list-style: none;
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .profile-checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .profile-checklist svg {
+      width: 16px;
+      height: 16px;
+      color: var(--status-success-text);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    /* =========================================================================
+       SECTION COMPARATIF : AVANT VS AVEC ÉCHAP
+       ========================================================================= */
+    section.comparison {
+      padding: 90px 0;
+      background: var(--color-bg-page);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .comparison-table-wrapper {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .comparison-table th, .comparison-table td {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .comparison-table th {
+      background: #F8FAFC;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .comparison-table td {
+      font-size: 14px;
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .td-old {
+      color: #71717A;
+    }
+
+    .td-echap {
+      background: rgba(234, 88, 12, 0.02);
+      font-weight: 600;
+      color: var(--color-primary-black);
+    }
+
+    /* =========================================================================
+       SECTION TARIFS
+       ========================================================================= */
+    section.pricing {
+      padding: 90px 0;
+      background: #FFFFFF;
+      border-top: 1px solid var(--color-border);
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 28px;
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    .pricing-card {
+      border: 1px solid var(--color-border);
+      border-radius: 16px;
+      padding: 36px 30px;
+      background: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--color-primary-black);
+      background: #09090B;
+      color: #FFFFFF;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pricing-badge-popular {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+    }
+
+    .pricing-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .pricing-desc {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .pricing-card.featured .pricing-desc {
+      color: #A1A1AA;
+    }
+
+    .pricing-price {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .pricing-card.featured .pricing-price {
+      color: #FFFFFF;
+    }
+
+    .pricing-period {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-bottom: 28px;
+    }
+
+    .pricing-card.featured .pricing-period {
+      color: #71717A;
+    }
+
+    .pricing-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pricing-features svg {
+      width: 16px;
+      height: 16px;
+      color: var(--status-success-text);
+      flex-shrink: 0;
+    }
+
+    .pricing-card.featured .pricing-features svg {
+      color: var(--color-accent);
+    }
+
+    /* =========================================================================
+       SECTION FAQ
+       ========================================================================= */
+    section.faq {
+      padding: 90px 0;
+      background: var(--color-bg-page);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .faq-list {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .faq-item {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.15s ease;
+    }
+
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      padding: 20px 24px;
+      background: none;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-primary-black);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .faq-icon {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s ease;
+      color: var(--color-text-secondary);
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(180deg);
+      color: var(--color-accent);
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 24px 22px;
+      font-size: 14px;
+      color: var(--color-text-secondary);
+      line-height: 1.6;
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    /* =========================================================================
+       BANNER CTA FINALE
+       ========================================================================= */
+    section.final-cta {
+      padding: 80px 0;
+      background: #09090B;
+      color: #FFFFFF;
+      text-align: center;
+      position: relative;
+    }
+
+    .final-cta-content {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .final-cta-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 4.5vw, 48px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .final-cta-subtitle {
+      font-size: 18px;
+      color: #A1A1AA;
+      margin-bottom: 36px;
+    }
+
+    /* =========================================================================
+       FOOTER
+       ========================================================================= */
+    footer.site-footer {
+      background: #09090B;
+      border-top: 1px solid #18181B;
+      color: #71717A;
+      padding: 60px 0 36px;
+      font-size: 13px;
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 48px;
+    }
+
+    @media (max-width: 768px) {
+      .footer-top {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .footer-brand-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .footer-text {
+      color: #71717A;
+      max-width: 320px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .footer-key-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #18181B;
+      border: 1px solid #27272A;
+      padding: 6px 12px;
+      border-radius: 8px;
+      color: #D4D4D8;
+      font-size: 12px;
+    }
+
+    .footer-col-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .footer-link {
+      color: #71717A;
+      text-decoration: none;
+      transition: color 0.15s ease;
+    }
+
+    .footer-link:hover {
+      color: #FFFFFF;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid #18181B;
+      padding-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Modal Feedback Toast */
+    .toast-escape {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #09090B;
+      border: 1px solid #27272A;
+      color: #FFFFFF;
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 999;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .toast-escape.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- =======================================================================
+       HEADER / NAVIGATION
+       ======================================================================= -->
+  <header class="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="brand-logo-link" title="ÉCHAP — Accueil">
+        <img src="assets/brand/logo-echap.svg" alt="ÉCHAP — Libérez-vous" class="brand-logo-img">
+      </a>
+
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#cockpit" class="nav-link">Expérience</a></li>
+          <li><a href="#piliers" class="nav-link">Les 4 Piliers</a></li>
+          <li><a href="#simulateur" class="nav-link">Laboratoire</a></li>
+          <li><a href="#profils" class="nav-link">Profils gérés</a></li>
+          <li><a href="#tarifs" class="nav-link">Tarifs</a></li>
+          <li><a href="#faq" class="nav-link">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <span class="badge-reform">
+          <span class="badge-dot"></span>
+          Prêt Factur-X 2026
+        </span>
+        <a href="#simulateur" class="btn btn-outline btn-sm">Simulateur</a>
+        <a href="#cockpit" class="btn btn-accent btn-sm">Démarrer</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- =======================================================================
+       HERO SECTION
+       ======================================================================= -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1 class="hero-title">
+          L’assistant qui libère les entrepreneurs de la <span class="text-gradient">paperasse</span>.
+        </h1>
+        <p class="hero-subtitle">
+          Administration courante, factures Factur-X 2026, déclarations URSSAF & TVA, rapprochement bancaire et obligations réglementaires. Déterministe, confidentiel et toujours sous votre contrôle.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="#simulateur" class="btn btn-accent btn-lg">
+            <span>Tester les simulateurs déterministes</span>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+          <a href="#cockpit" class="btn btn-outline btn-lg">
+            <span>Explorer le cockpit en direct</span>
+          </a>
+        </div>
+
+        <!-- Clavier Tactile Échap interactif -->
+        <div class="hero-keycap-showcase">
+          <button class="mac-esc-button" id="macEscBtn" title="Appuyez sur la touche Échap physique de votre clavier ou cliquez ici">
+            <div class="keycap-interactive-box">
+              <div class="keycap-interactive-top">
+                <span class="keycap-interactive-legend">Echap</span>
+              </div>
+            </div>
+            <span class="keycap-interactive-hint">CLIQUEZ OU TAPEZ SUR [ÉCHAP]</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- =====================================================================
+           COCKPIT MOCKUP PREVIEW
+           ===================================================================== -->
+      <div class="cockpit-wrapper" id="cockpit">
+        <!-- Fenêtre macOS style -->
+        <div class="window-header">
+          <div class="window-traffic-lights">
+            <span class="window-dot close"></span>
+            <span class="window-dot min"></span>
+            <span class="window-dot max"></span>
+          </div>
+          <div class="window-title">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span>echap-session.local · Espace Entreprise Sécurisé</span>
+          </div>
+          <div style="font-size: 11px; color: #10B981; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+            <span style="width:6px;height:6px;background:#10B981;border-radius:50%"></span> Connecté
+          </div>
+        </div>
+
+        <!-- Onglets Profils Interactifs -->
+        <div class="profile-tabs-bar">
+          <button class="profile-tab-btn active" data-profile="micro">
+            <span>🧑‍💻</span> Micro-entreprise (Freelance)
+          </button>
+          <button class="profile-tab-btn" data-profile="sasu">
+            <span>🏢</span> SASU à l'IS (Conseil)
+          </button>
+          <button class="profile-tab-btn" data-profile="bnc">
+            <span>⚖️</span> Profession Libérale (BNC Déclaration contrôlée)
+          </button>
+          <button class="profile-tab-btn" data-profile="sci">
+            <span>🏠</span> SCI Immobilière (Gestion Locative)
+          </button>
+        </div>
+
+        <!-- Split : Conversation & Dashboard Cartes Synchronisées -->
+        <div class="cockpit-split">
+          <!-- Panneau Gauche : Conversation Silencieuse & Factuelle -->
+          <div class="chat-pane">
+            <div class="chat-header">
+              <div class="assistant-status">
+                <div class="assistant-avatar">ESC</div>
+                <div>
+                  <div style="font-weight: 700; font-size: 14px;">ÉCHAP — Assistant</div>
+                  <div style="font-size: 11px; color: var(--color-text-secondary);">Moteur déterministe & Règles PCG 2026</div>
+                </div>
+              </div>
+              <span class="badge-status valid">À jour</span>
+            </div>
+
+            <div class="chat-stream" id="chatStream">
+              <!-- Dynamically populated by JS according to selected profile -->
+            </div>
+
+            <div class="chat-input-bar">
+              <input type="text" placeholder="Demandez une vérification, un calcul d'IK ou une clôture..." readonly>
+              <button class="btn btn-primary btn-sm" id="btnSimulateAction">Simuler</button>
+            </div>
+          </div>
+
+          <!-- Panneau Droit : Cartes Métier Synthétiques (Exigences PRODUIT.md) -->
+          <div class="dashboard-pane" id="dashPane">
+            <!-- Dynamically populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       SECTION LES 4 PILIERS DE MARQUE
+       ======================================================================= -->
+  <section class="pillars" id="piliers">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Fondations & Principes Directeurs</div>
+        <h2 class="section-title">Pourquoi ÉCHAP est fondamentalement différent.</h2>
+        <p class="section-desc">
+          Nous rejetons la complexité des ERP traditionnels et l'inconsistance des chatbots généralistes. L'excellence administrative est silencieuse, mathématique et prévisible.
+        </p>
+      </div>
+
+      <div class="pillars-grid">
+        <!-- Pilier 1 -->
+        <div class="pillar-card">
+          <div class="pillar-icon-box">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h8m-8 6h16"/></svg>
+          </div>
+          <h3 class="pillar-title">1. Sobriété Radicale</h3>
+          <p class="pillar-text">
+            Fini les cockpits surchargés à 200 sous-menus et les graphiques inutiles. ÉCHAP n'affiche que l'essentiel : ce qui est fait, ce qui est en attente, et le bouton pour valider en 2 secondes.
+          </p>
+          <div class="pillar-refusal">
+            <span><strong>Refus formel :</strong> cockpits ERP étouffants, gadgets visuels et notifications intempestives.</span>
+          </div>
+        </div>
+
+        <!-- Pilier 2 -->
+        <div class="pillar-card">
+          <div class="pillar-icon-box">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+          </div>
+          <h3 class="pillar-title">2. Déterminisme & Rigueur</h3>
+          <p class="pillar-text">
+            Les calculs de TVA, de cotisations URSSAF et de résultat ne sont <em>jamais</em> confiés à une IA probabiliste. Le moteur applique le Plan Comptable Général 2026 et les barèmes officiels de l'administration.
+          </p>
+          <div class="pillar-refusal">
+            <span><strong>Refus formel :</strong> hallucinations de LLM, approximations fiscales et pseudo-certifications sans preuve.</span>
+          </div>
+        </div>
+
+        <!-- Pilier 3 -->
+        <div class="pillar-card">
+          <div class="pillar-icon-box">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <h3 class="pillar-title">3. Délégation sous Contrôle</h3>
+          <p class="pillar-text">
+            L'assistant effectue les micro-tâches répétitives (extraction des pièces, rapprochement bancaire, calculs). Le dirigeant garde la main souveraine sur les décisions engageantes (dépôt, paiement, signature).
+          </p>
+          <div class="pillar-refusal">
+            <span><strong>Refus formel :</strong> signature aveugle en boîte noire comme micro-validation harassante pour chaque clic.</span>
+          </div>
+        </div>
+
+        <!-- Pilier 4 -->
+        <div class="pillar-card">
+          <div class="pillar-icon-box">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <h3 class="pillar-title">4. Secret & Étanchéité</h3>
+          <p class="pillar-text">
+            Le secret des affaires est absolu. Vos factures, marges et coordonnées bancaires sont hébergées dans un environnement étanche et ne servent jamais à entraîner des modèles d'intelligence artificielle.
+          </p>
+          <div class="pillar-refusal">
+            <span><strong>Refus formel :</strong> monétisation des données financières, profilage publicitaire et opacité des flux.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       LABORATOIRE INTERACTIF / SIMULATEUR DÉTERMINISTE
+       ======================================================================= -->
+  <section class="simulator" id="simulateur">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Laboratoire Opérationnel</div>
+        <h2 class="section-title">Testez la rigueur déterministe en direct.</h2>
+        <p class="section-desc">
+          Aucun chiffre n'est inventé. Manipulez les 3 simulateurs officiels conformes à la réglementation française en vigueur.
+        </p>
+      </div>
+
+      <div class="simulator-box">
+        <!-- Navigation Onglets Simulateurs -->
+        <div class="simulator-nav">
+          <button class="sim-tab-btn active" data-sim="facturx">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>1. Factur-X 2026 (Réforme)</span>
+          </button>
+          <button class="sim-tab-btn" data-sim="ik">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>2. Barème Kilométrique (IK 2026)</span>
+          </button>
+          <button class="sim-tab-btn" data-sim="urssaf">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>3. Cotisations URSSAF & TVA</span>
+          </button>
+        </div>
+
+        <!-- SIMULATEUR 1 : FACTUR-X -->
+        <div class="sim-panel active" id="sim-facturx">
+          <div class="sim-grid-2">
+            <div>
+              <div class="sim-field">
+                <label class="sim-label">Client (Professionnel assujetti)</label>
+                <input type="text" class="sim-input" id="fxClient" value="TechSolutions SAS (SIREN 842 190 334)">
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Montant Hors Taxes (€ HT)</label>
+                <input type="number" class="sim-input tnum" id="fxAmountHT" value="2500" step="50" min="0">
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Taux de TVA applicable</label>
+                <select class="sim-select" id="fxVatRate">
+                  <option value="0.20" selected>20.0% (Taux normal standard)</option>
+                  <option value="0.10">10.0% (Taux intermédiaire)</option>
+                  <option value="0.055">5.5% (Taux réduit)</option>
+                  <option value="0.00">0.0% (Franchise art. 293 B ou export)</option>
+                </select>
+              </div>
+              <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 10px;">
+                💡 <em>Mentions obligatoires générées automatiquement : pénalités de retard (BCE + 10 pts) + indemnité forfaitaire pour frais de recouvrement (40 €).</em>
+              </div>
+            </div>
+
+            <div class="sim-card-result">
+              <div>
+                <div class="sim-result-head">Total TTC Conforme Factur-X</div>
+                <div class="sim-result-amount tnum" id="fxTotalTTC">3 000,00 €</div>
+                <ul class="sim-result-list">
+                  <li><span>Total HT :</span> <strong class="tnum" id="fxResHT">2 500,00 €</strong></li>
+                  <li><span>Montant TVA :</span> <strong class="tnum" id="fxResTVA">500,00 €</strong></li>
+                  <li><span>Profil Factur-X :</span> <strong style="color:#A7F3D0">EN 16931 (BASIC WL)</strong></li>
+                  <li><span>Routage PDP :</span> <strong>Prêt pour transmission 2026</strong></li>
+                </ul>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-sm" style="width: 100%; border: 1px solid #3F3F46;" onclick="alert('Simulation Factur-X : Métadonnées XML ZUGFeRD 2.2 incorporées avec succès.')">
+                  <span>Visualiser les métadonnées XML Factur-X</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIMULATEUR 2 : IK 2026 -->
+        <div class="sim-panel" id="sim-ik">
+          <div class="sim-grid-2">
+            <div>
+              <div class="sim-field">
+                <label class="sim-label">Puissance Fiscale du Véhicule (CV)</label>
+                <select class="sim-select" id="ikCV">
+                  <option value="3">3 CV et moins</option>
+                  <option value="4">4 CV</option>
+                  <option value="5" selected>5 CV (Standard berline)</option>
+                  <option value="6">6 CV</option>
+                  <option value="7">7 CV et plus</option>
+                </select>
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Kilomètres professionnels annuels (km)</label>
+                <input type="number" class="sim-input tnum" id="ikDistance" value="6500" step="500" min="0">
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Type de motorisation</label>
+                <select class="sim-select" id="ikMotor">
+                  <option value="standard" selected>Thermique / Hybride classique</option>
+                  <option value="electric">100% Électrique (+20% majoration légale)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sim-card-result">
+              <div>
+                <div class="sim-result-head">Indemnité Kilométrique Déductible</div>
+                <div class="sim-result-amount tnum" id="ikTotalAmount">3 905,00 €</div>
+                <ul class="sim-result-list">
+                  <li><span>Tranche fiscale :</span> <strong id="ikTrancheLabel">5 001 à 20 000 km</strong></li>
+                  <li><span>Formule officielle :</span> <strong class="tnum" id="ikFormula">(d × 0.339) + 1 390</strong></li>
+                  <li><span>Statut fiscal :</span> <strong style="color:#A7F3D0">Exonéré de cotisations sociales</strong></li>
+                  <li><span>Justification :</span> <strong>Journal des trajets validé</strong></li>
+                </ul>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-sm" style="width: 100%; border: 1px solid #3F3F46;" onclick="alert('Rapport IK 2026 prêt à intégrer aux écritures comptables.')">
+                  <span>Générer l'écriture au journal (Compte 6251)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIMULATEUR 3 : URSSAF & TVA -->
+        <div class="sim-panel" id="sim-urssaf">
+          <div class="sim-grid-2">
+            <div>
+              <div class="sim-field">
+                <label class="sim-label">Activité Micro-entrepreneur</label>
+                <select class="sim-select" id="uActivity">
+                  <option value="bnc" selected>Prestations de services BNC (Taux 23.1% + CFP 0.2%)</option>
+                  <option value="bic_serv">Prestations de services BIC (Taux 21.2% + CFP 0.3%)</option>
+                  <option value="vente">Achat / Revente de marchandises (Taux 12.3% + CFP 0.1%)</option>
+                </select>
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Chiffre d'Affaires Encaissé Trimestre (€)</label>
+                <input type="number" class="sim-input tnum" id="uCA" value="18500" step="500" min="0">
+              </div>
+              <div class="sim-field">
+                <label class="sim-label">Régime de TVA</label>
+                <select class="sim-select" id="uVatChoice">
+                  <option value="franchise" selected>Franchise en base de TVA (Sous le seuil légal)</option>
+                  <option value="assujetti">Assujetti à la TVA (Déclaration CA3 / 3517)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="sim-card-result">
+              <div>
+                <div class="sim-result-head">Net Disponible en Poche (Après cotisations)</div>
+                <div class="sim-result-amount tnum" id="uNetPocket">14 189,50 €</div>
+                <ul class="sim-result-list">
+                  <li><span>Cotisations sociales :</span> <strong class="tnum" id="uCotisTotal">4 273,50 €</strong></li>
+                  <li><span>Contribution formation (CFP) :</span> <strong class="tnum" id="uCfpAmount">37,00 €</strong></li>
+                  <li><span>Total exigible URSSAF :</span> <strong class="tnum" id="uTotalDue" style="color:#FDE68A">4 310,50 €</strong></li>
+                  <li><span>Échéance de déclaration :</span> <strong>Dernier jour du mois civil</strong></li>
+                </ul>
+              </div>
+              <div>
+                <button class="btn btn-primary btn-sm" style="width: 100%; border: 1px solid #3F3F46;" onclick="alert('Télédéclaration URSSAF pré-remplie avec le montant exact calculé.')">
+                  <span>Préparer le bordereau déclaratif</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       PROFILS ÉLIGIBLES & PÉRIMÈTRE
+       ======================================================================= -->
+  <section class="profiles" id="profils">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Transparence du Périmètre</div>
+        <h2 class="section-title">Taillé pour les créateurs de valeur indépendants.</h2>
+        <p class="section-desc">
+          Nous disons avec franchise ce que nous prenons en charge dès le premier jour, et ce que nous refusons délibérément pour garantir votre sécurité juridique.
+        </p>
+      </div>
+
+      <div class="profiles-grid">
+        <!-- Profil 1 -->
+        <div class="profile-card included">
+          <span class="profile-tag">100% COUVERT</span>
+          <h3 class="profile-title">Micro-entrepreneurs & Freelances</h3>
+          <p class="profile-summary">Prestations de services (BNC/BIC) et vente de biens.</p>
+          <ul class="profile-checklist">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Déclaration URSSAF mensuelle ou trimestrielle</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Suivi en temps réel des seuils de franchise TVA</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Livre des recettes et registre des achats conforme</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Profil 2 -->
+        <div class="profile-card included">
+          <span class="profile-tag">100% COUVERT</span>
+          <h3 class="profile-title">SASU & EURL à l'IS</h3>
+          <p class="profile-summary">Sociétés commerciales sans salariés hors mandataire social.</p>
+          <ul class="profile-checklist">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Rapprochement bancaire déterministe (Qonto, Stripe...)</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Paie du dirigeant intégrée via le dispositif officiel TESE</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Génération du FEC pour votre expert-comptable</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Profil 3 -->
+        <div class="profile-card included">
+          <span class="profile-tag">100% COUVERT</span>
+          <h3 class="profile-title">Professions Libérales (BNC)</h3>
+          <p class="profile-summary">Consultants, professionnels de santé, avocats au réel.</p>
+          <ul class="profile-checklist">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Déclaration 2035 & Déclaration contrôlée</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Calcul automatisé des frais de déplacement & IK</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Synchronisation avec votre AGA ou expert-comptable</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Profil 4 -->
+        <div class="profile-card included">
+          <span class="profile-tag">100% COUVERT</span>
+          <h3 class="profile-title">SCI Immobilières (IR / IS)</h3>
+          <p class="profile-summary">Gestion locative de patrimoine familial ou professionnel.</p>
+          <ul class="profile-checklist">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Suivi des encaissements de loyers & quittances</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Déclaration 2072 préparée pour chaque associé</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Suivi rigoureux des comptes courants d'associés</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       SECTION COMPARATIF : AVANT VS AVEC ÉCHAP
+       ======================================================================= -->
+  <section class="comparison">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Transformation Opérationnelle</div>
+        <h2 class="section-title">Ce qui change réellement au quotidien.</h2>
+        <p class="section-desc">
+          Comparez votre routine administrative d'hier avec l'expérience épurée d'ÉCHAP.
+        </p>
+      </div>
+
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Tâche administrative</th>
+              <th style="width: 37%;">Sans ÉCHAP (La corvée classique)</th>
+              <th style="width: 38%;" class="td-echap">Avec ÉCHAP (Libéré)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Facturation 2026</strong></td>
+              <td class="td-old">PDF artisanal sans données structurées, risque de rejet par les plateformes de dématérialisation partenaires (PDP).</td>
+              <td class="td-echap">Factures hybrides Factur-X standardisées prêtes pour les plateformes agréées, conformité immédiate.</td>
+            </tr>
+            <tr>
+              <td><strong>Gestion des tickets & reçus</strong></td>
+              <td class="td-old">Sachets de reçus papier perdus, relances angoissées du comptable le 25 du mois, TVA non déduite.</td>
+              <td class="td-echap">Transfert par email ou photo : rapprochement instantané avec la ligne bancaire, archivage à valeur probante.</td>
+            </tr>
+            <tr>
+              <td><strong>Échéances fiscales</strong></td>
+              <td class="td-old">Peur de l'amende de 10% pour oubli d'une déclaration URSSAF, calculs manuels stressants sur tableurs.</td>
+              <td class="td-echap">Rappels proactifs avec le montant mathématique exact calculé. Un simple clic pour approuver l'export.</td>
+            </tr>
+            <tr>
+              <td><strong>Bilan & FEC annuel</strong></td>
+              <td class="td-old">Des semaines de panique en fin d'exercice pour retrouver les pièces manquantes et justifier les soldes.</td>
+              <td class="td-echap">Comptabilité propre tout au long de l'année. Fichier FEC certifié téléchargeable à tout moment.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       TARIFS TRANSPARENTS
+       ======================================================================= -->
+  <section class="pricing" id="tarifs">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Modèle Économique Éthique</div>
+        <h2 class="section-title">Freemium honnête et paiement à l'acte.</h2>
+        <p class="section-desc">
+          Pas de verrouillage d'abonnement toxique. Vous commencez gratuitement et ne payez que lorsque l'assistant vous fait gagner du temps ou réalise un acte officiel.
+        </p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Formule 1 : Essentiel -->
+        <div class="pricing-card">
+          <div class="pricing-name">Essentiel</div>
+          <div class="pricing-desc">Pour démarrer et sécuriser la conformité de facturation.</div>
+          <div class="pricing-price tnum">0 €</div>
+          <div class="pricing-period">Gratuit à vie · Sans carte bancaire</div>
+          <ul class="pricing-features">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Facturation Factur-X illimitée (Réforme 2026)</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Registre des achats & livre de recettes</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Simulateur d'IK & suivi de trésorerie</span>
+            </li>
+          </ul>
+          <a href="#simulateur" class="btn btn-outline" style="width: 100%;">Démarrer gratuitement</a>
+        </div>
+
+        <!-- Formule 2 : Autonome (Populaire) -->
+        <div class="pricing-card featured">
+          <span class="pricing-badge-popular">Recommandé</span>
+          <div class="pricing-name">Autonome</div>
+          <div class="pricing-desc">L'assistant complet qui pilote votre gestion courante.</div>
+          <div class="pricing-price tnum">19 €</div>
+          <div class="pricing-period">Par mois · Sans engagement de durée</div>
+          <ul class="pricing-features">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Tout ce qui est inclus dans Essentiel</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Rapprochement bancaire temps réel automatique</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Préparation déclarations TVA (CA3) & URSSAF</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Alertes proactives & Export FEC complet</span>
+            </li>
+          </ul>
+          <a href="#cockpit" class="btn btn-accent" style="width: 100%;">Libérez-vous maintenant</a>
+        </div>
+
+        <!-- Formule 3 : À l'acte -->
+        <div class="pricing-card">
+          <div class="pricing-name">Actes Spécialisés</div>
+          <div class="pricing-desc">Pour les formalités ponctuelles et la clôture annuelle.</div>
+          <div class="pricing-price tnum" style="font-size: 28px;">À l'acte</div>
+          <div class="pricing-period">Facturé uniquement lors de la réalisation</div>
+          <ul class="pricing-features">
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Liasse fiscale simplifiée 2033 / 2065</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Procès-verbal d'approbation des comptes annuels</span>
+            </li>
+            <li>
+              <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Dépôt au greffe avec déclaration de confidentialité</span>
+            </li>
+          </ul>
+          <a href="#faq" class="btn btn-outline" style="width: 100%;">Consulter les actes</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       SECTION FAQ
+       ========================================================================= -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-eyebrow">Réponses Factuelles</div>
+        <h2 class="section-title">Questions fréquentes.</h2>
+        <p class="section-desc">Tout ce que vous devez savoir en toute clarté.</p>
+      </div>
+
+      <div class="faq-list">
+        <!-- Q1 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>ÉCHAP remplace-t-il mon expert-comptable ?</span>
+            <svg class="faq-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer">
+            Non, et c'est un point clé. Pour les structures soumises à obligation de bilan, ÉCHAP prépare et fiabilise l'intégralité des écritures courantes, élimine les pièces manquantes et génère le fichier normalisé FEC. Votre expert-comptable reçoit une comptabilité impeccable et peut se concentrer sur son rôle de conseil à haute valeur ajoutée.
+          </div>
+        </div>
+
+        <!-- Q2 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Comment fonctionne la préparation à la réforme de la facturation 2026 ?</span>
+            <svg class="faq-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer">
+            Dès 2026, toutes les entreprises assujetties en France devront être en capacité de recevoir et d'émettre des factures électroniques structurées. ÉCHAP génère nativement le format standard franco-allemand Factur-X (profil Basic/EN16931) qui couple un PDF lisible par un humain et un fichier XML ZUGFeRD lisible par les plateformes de dématérialisation partenaires (PDP).
+          </div>
+        </div>
+
+        <!-- Q3 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Comment garantissez-vous l'absence d'erreurs de calcul de l'IA ?</span>
+            <svg class="faq-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer">
+            L'IA ne calcule jamais le résultat de vos impôts. Elle sert uniquement à interpréter le langage naturel et à qualifier les pièces. Tous les calculs comptables, montants de TVA et cotisations sont exécutés par un moteur déterministe en code informatique pur adossé aux tables du Plan Comptable Général 2026.
+          </div>
+        </div>
+
+        <!-- Q4 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Qu'est-ce que le dispositif TESE pour les dirigeants ?</span>
+            <svg class="faq-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer">
+            Le Titre Emploi Service Entreprise (TESE) est un service officiel de l'URSSAF qui simplifie les formalités sociales. Pour les mandataires sociaux de SASU éligibles, ÉCHAP prépare les déclarations TESE afin d'éditer les bulletins de paie sans recourir à un gestionnaire de paie onéreux.
+          </div>
+        </div>
+
+        <!-- Q5 -->
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Mes données confidentielles sont-elles réutilisées pour entraîner des modèles ?</span>
+            <svg class="faq-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="faq-answer">
+            Absolument pas. Les routes d'inférence utilisées respectent des engagements stricts de zéro rétention (Zero Data Retention). Vos factures, extraits bancaires et bilans ne sont jamais persistés chez les fournisseurs de modèles d'IA.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       BANNER CTA FINALE
+       ========================================================================= -->
+  <section class="final-cta">
+    <div class="container final-cta-content">
+      <h2 class="final-cta-title">Reprenez le contrôle de votre temps dès aujourd'hui.</h2>
+      <p class="final-cta-subtitle">
+        Ne laissez plus la paperasse vous voler vos soirées et vos week-ends.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <a href="#cockpit" class="btn btn-accent btn-lg">
+          <span>Démarrer l'expérience ÉCHAP</span>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#simulateur" class="btn btn-outline btn-lg" style="color:#FFFFFF; border-color:#3F3F46; background:transparent;">
+          <span>Tester le laboratoire</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- =======================================================================
+       FOOTER
+       ========================================================================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div>
+          <div class="footer-brand-title">
+            <span class="keycap-tag">Échap</span>
+            <span>ECHAP</span>
+          </div>
+          <p class="footer-text">
+            L'assistant qui libère les entrepreneurs de la paperasse. Conçu avec rigueur et sobriété pour les indépendants et dirigeants en France.
+          </p>
+          <div class="footer-key-hint">
+            <span class="keycap-tag" style="padding: 2px 5px; font-size: 10px;">Esc</span>
+            <span>Appuyez sur Échap pour fermer les dialogues</span>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Produit</div>
+          <ul class="footer-links">
+            <li><a href="#cockpit" class="footer-link">Cockpit de gestion</a></li>
+            <li><a href="#simulateur" class="footer-link">Simulateurs déterministes</a></li>
+            <li><a href="#piliers" class="footer-link">Les 4 piliers de marque</a></li>
+            <li><a href="#tarifs" class="footer-link">Tarifs & Actes</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Réglementation</div>
+          <ul class="footer-links">
+            <li><a href="#simulateur" class="footer-link">Factur-X & Réforme 2026</a></li>
+            <li><a href="#profils" class="footer-link">Plan Comptable Général 2026</a></li>
+            <li><a href="#profils" class="footer-link">Dispositif URSSAF TESE</a></li>
+            <li><a href="#piliers" class="footer-link">Exportation FEC normalisée</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-col-title">Confidentialité</div>
+          <ul class="footer-links">
+            <li><a href="#" class="footer-link">Secret des affaires</a></li>
+            <li><a href="#" class="footer-link">Politique Zéro Rétention IA</a></li>
+            <li><a href="#" class="footer-link">Conformité RGPD</a></li>
+            <li><a href="#" class="footer-link">Mentions légales</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2026 ÉCHAP. Tous droits réservés. L'assistant administratif autonome des professionnels.</div>
+        <div style="display: flex; gap: 16px;">
+          <span>France métropolitaine</span>
+          <span>·</span>
+          <span>Version MTP Expérimentale</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Notification Toast Échap -->
+  <div class="toast-escape" id="toastEscape">
+    <span class="keycap-tag">Échap</span>
+    <span id="toastEscapeMsg">Touche [Échap] détectée : Retour au calme administratif.</span>
+  </div>
+
+  <!-- =======================================================================
+       SCRIPTS JAVASCRIPT ULTRA-LÉGERS & INTERACTIFS
+       ======================================================================= -->
+  <script>
+    // Données des profils pour le Cockpit Interactif (docs/PRODUIT.md)
+    const PROFILES_DATA = {
+      micro: {
+        chat: [
+          { role: 'user', text: 'Quelles sont mes obligations pour la fin du mois ?' },
+          { 
+            role: 'assistant', 
+            text: 'Votre déclaration URSSAF du 1er trimestre est prête. Chiffre d’affaires encaissé : <strong>18 500,00 €</strong>. Cotisations sociales calculées : <strong>4 273,50 €</strong>. Le seuil de franchise TVA (36 800 €) n’est pas atteint (50.2%). Confirmez-vous la préparation du bordereau ?',
+            chips: [
+              { label: 'Confirmer le bordereau', action: 'confirm', toast: 'Bordereau URSSAF préparé avec succès.' },
+              { label: 'Voir le détail des recettes', action: 'detail', toast: 'Journal des recettes exporté.' }
+            ]
+          }
+        ],
+        metrics: {
+          turnover: '18 500,00 €',
+          turnoverSub: 'CA encaissé sur le trimestre',
+          vatStatus: 'Franchise en base (Art. 293 B)',
+          vatSub: 'Seuil atteint à 50.2% (18 500 / 36 800 €)',
+          nextDeadline: '30 avril 2026',
+          deadlineDesc: 'Déclaration trimestrielle URSSAF',
+          fecStatus: 'Livre des recettes conforme'
+        }
+      },
+      sasu: {
+        chat: [
+          { role: 'user', text: 'Peux-tu rapprocher le virement Qonto reçu hier de 7 200,00 € ?' },
+          { 
+            role: 'assistant', 
+            text: 'Virement de 7 200,00 € rapproché avec certitude de la facture <strong>FA-2026-042</strong> (Client : NovaCorp). Factur-X acquittée. Le solde de TVA collectée du mois s’élève désormais à <strong>1 440,00 €</strong>. Écriture inscrite au journal de banque (Compte 512000).',
+            chips: [
+              { label: 'Télécharger le reçu acquitté', action: 'confirm', toast: 'Facture acquittée téléchargée.' },
+              { label: 'Vérifier la ligne FEC', action: 'detail', toast: 'Écriture 512000 / 411000 validée.' }
+            ]
+          }
+        ],
+        metrics: {
+          turnover: '42 800,00 €',
+          turnoverSub: 'Chiffre d’affaires HT cumulé',
+          vatStatus: 'TVA CA3 : 2 880,00 € nette',
+          vatSub: 'Échéance le 19 du mois prochain',
+          nextDeadline: '19 mai 2026',
+          deadlineDesc: 'Télédéclaration TVA CA3',
+          fecStatus: '100% rapproché (42 écritures)'
+        }
+      },
+      bnc: {
+        chat: [
+          { role: 'user', text: 'Où en est le calcul de mes indemnités kilométriques du mois ?' },
+          { 
+            role: 'assistant', 
+            text: '14 déplacements professionnels qualifiés au journal, totalisant <strong>1 850 km</strong> sur véhicule 5 CV. Selon le barème officiel 2026, l’indemnité déductible s’élève à <strong>1 110,00 €</strong>. La pièce justificative récapitulative est prête pour votre AGA.',
+            chips: [
+              { label: 'Inscrire en charge (6251)', action: 'confirm', toast: 'Charge déductible enregistrée.' },
+              { label: 'Consulter la carte des trajets', action: 'detail', toast: 'Relevé kilométrique affiché.' }
+            ]
+          }
+        ],
+        metrics: {
+          turnover: '31 400,00 €',
+          turnoverSub: 'Recettes professionnelles BNC',
+          vatStatus: 'Déclaration 2035 en cours',
+          vatSub: 'Frais professionnels déduits : 6 420 €',
+          nextDeadline: '15 mai 2026',
+          deadlineDesc: 'Télétransmission liasse 2035',
+          fecStatus: 'Grand Livre BNC conforme'
+        }
+      },
+      sci: {
+        chat: [
+          { role: 'user', text: 'Les loyers du mois de mai ont-ils tous été encaissés ?' },
+          { 
+            role: 'assistant', 
+            text: '3 loyers sur 3 encaissés pour un total de <strong>3 450,00 €</strong>. Les 3 quittances de loyer dématérialisées ont été transmises aux locataires. L’échéance d’emprunt bancaire (2 100,00 €) est programmée pour le 10.',
+            chips: [
+              { label: 'Archiver les quittances', action: 'confirm', toast: 'Quittances archivées avec succès.' },
+              { label: 'Pointage trésorerie SCI', action: 'detail', toast: 'Solde compte courant associé à jour.' }
+            ]
+          }
+        ],
+        metrics: {
+          turnover: '17 250,00 €',
+          turnoverSub: 'Loyers perçus exercice en cours',
+          vatStatus: 'Régime IR (Transparence)',
+          vatSub: 'Déclaration 2072 préparée',
+          nextDeadline: '10 mai 2026',
+          deadlineDesc: 'Échéance emprunt immobilier',
+          fecStatus: 'Comptes courants équilibrés'
+        }
+      }
+    };
+
+    // Initialisation du Cockpit
+    function renderCockpit(profileKey) {
+      const p = PROFILES_DATA[profileKey];
+      const chatStream = document.getElementById('chatStream');
+      const dashPane = document.getElementById('dashPane');
+
+      chatStream.innerHTML = '';
+      p.chat.forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${msg.role}`;
+        msgDiv.innerHTML = msg.text;
+
+        if (msg.chips && msg.chips.length > 0) {
+          const chipsContainer = document.createElement('div');
+          chipsContainer.className = 'action-chips';
+          msg.chips.forEach(chip => {
+            const btn = document.createElement('button');
+            btn.className = `chip-btn ${chip.action === 'confirm' ? 'confirm' : ''}`;
+            btn.innerHTML = `${chip.action === 'confirm' ? '✓ ' : ''}${chip.label}`;
+            btn.onclick = () => showToast(chip.toast);
+            chipsContainer.appendChild(btn);
+          });
+          msgDiv.appendChild(chipsContainer);
+        }
+
+        chatStream.appendChild(msgDiv);
+      });
+
+      dashPane.innerHTML = `
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">Chiffre d’affaires & Recettes</span>
+            <span class="badge-status valid">Déterministe</span>
+          </div>
+          <div class="metric-big tnum">${p.metrics.turnover}</div>
+          <div class="metric-sub">${p.metrics.turnoverSub}</div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">Profil Fiscal & TVA</span>
+            <span class="badge-status valid">Conforme 2026</span>
+          </div>
+          <div class="metric-big" style="font-size: 18px;">${p.metrics.vatStatus}</div>
+          <div class="metric-sub">${p.metrics.vatSub}</div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">Prochaine Échéance Légale</span>
+            <span class="badge-status warn">Vigilance</span>
+          </div>
+          <div class="metric-big" style="font-size: 20px; color: var(--color-accent);">${p.metrics.nextDeadline}</div>
+          <div class="metric-sub">${p.metrics.deadlineDesc}</div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-header">
+            <span class="dash-card-title">Intégrité & FEC</span>
+            <span class="badge-status valid">Audit OK</span>
+          </div>
+          <div class="fec-row">
+            <span>Contrôle billetterie :</span>
+            <strong style="color: var(--status-success-text);">0 anomalie</strong>
+          </div>
+          <div class="fec-row">
+            <span>État des écritures :</span>
+            <span class="tnum" style="font-weight:600;">${p.metrics.fecStatus}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderCockpit(btn.getAttribute('data-profile'));
+      });
+    });
+
+    document.getElementById('btnSimulateAction').addEventListener('click', () => {
+      showToast('Action simulée : rapprochement automatique instantané.');
+    });
+
+    // =========================================================================
+    // LABORATOIRE : CALCULATEURS DÉTERMINISTES EN TEMPS RÉEL
+    // =========================================================================
+    document.querySelectorAll('.sim-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sim-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.sim-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(`sim-${btn.getAttribute('data-sim')}`).classList.add('active');
+      });
+    });
+
+    const fxAmountHT = document.getElementById('fxAmountHT');
+    const fxVatRate = document.getElementById('fxVatRate');
+    const fxTotalTTC = document.getElementById('fxTotalTTC');
+    const fxResHT = document.getElementById('fxResHT');
+    const fxResTVA = document.getElementById('fxResTVA');
+
+    function updateFacturX() {
+      const ht = parseFloat(fxAmountHT.value) || 0;
+      const rate = parseFloat(fxVatRate.value) || 0;
+      const vat = ht * rate;
+      const ttc = ht + vat;
+
+      fxTotalTTC.textContent = formatEuro(ttc);
+      fxResHT.textContent = formatEuro(ht);
+      fxResTVA.textContent = formatEuro(vat);
+    }
+
+    fxAmountHT.addEventListener('input', updateFacturX);
+    fxVatRate.addEventListener('change', updateFacturX);
+
+    const ikCV = document.getElementById('ikCV');
+    const ikDistance = document.getElementById('ikDistance');
+    const ikMotor = document.getElementById('ikMotor');
+    const ikTotalAmount = document.getElementById('ikTotalAmount');
+    const ikFormula = document.getElementById('ikFormula');
+    const ikTrancheLabel = document.getElementById('ikTrancheLabel');
+
+    function updateIK() {
+      const cv = parseInt(ikCV.value) || 5;
+      const d = parseFloat(ikDistance.value) || 0;
+      const isElectric = ikMotor.value === 'electric';
+
+      let total = 0;
+      let formulaText = '';
+      let tranche = '';
+
+      if (d <= 5000) {
+        tranche = 'Jusqu’à 5 000 km';
+        if (cv <= 3) { total = d * 0.529; formulaText = 'd × 0.529'; }
+        else if (cv === 4) { total = d * 0.606; formulaText = 'd × 0.606'; }
+        else if (cv === 5) { total = d * 0.636; formulaText = 'd × 0.636'; }
+        else if (cv === 6) { total = d * 0.665; formulaText = 'd × 0.665'; }
+        else { total = d * 0.697; formulaText = 'd × 0.697'; }
+      } else if (d <= 20000) {
+        tranche = '5 001 à 20 000 km';
+        if (cv <= 3) { total = (d * 0.316) + 1065; formulaText = '(d × 0.316) + 1 065'; }
+        else if (cv === 4) { total = (d * 0.340) + 1330; formulaText = '(d × 0.340) + 1 330'; }
+        else if (cv === 5) { total = (d * 0.357) + 1395; formulaText = '(d × 0.357) + 1 395'; }
+        else if (cv === 6) { total = (d * 0.374) + 1457; formulaText = '(d × 0.374) + 1 457'; }
+        else { total = (d * 0.394) + 1515; formulaText = '(d × 0.394) + 1 515'; }
+      } else {
+        tranche = 'Au-delà de 20 000 km';
+        if (cv <= 3) { total = d * 0.370; formulaText = 'd × 0.370'; }
+        else if (cv === 4) { total = d * 0.407; formulaText = 'd × 0.407'; }
+        else if (cv === 5) { total = d * 0.427; formulaText = 'd × 0.427'; }
+        else if (cv === 6) { total = d * 0.447; formulaText = 'd × 0.447'; }
+        else { total = d * 0.470; formulaText = 'd × 0.470'; }
+      }
+
+      if (isElectric) {
+        total = total * 1.20;
+        formulaText += ' (+20% élec)';
+      }
+
+      ikTotalAmount.textContent = formatEuro(total);
+      ikFormula.textContent = formulaText;
+      ikTrancheLabel.textContent = tranche;
+    }
+
+    ikCV.addEventListener('change', updateIK);
+    ikDistance.addEventListener('input', updateIK);
+    ikMotor.addEventListener('change', updateIK);
+
+    const uActivity = document.getElementById('uActivity');
+    const uCA = document.getElementById('uCA');
+    const uNetPocket = document.getElementById('uNetPocket');
+    const uCotisTotal = document.getElementById('uCotisTotal');
+    const uCfpAmount = document.getElementById('uCfpAmount');
+    const uTotalDue = document.getElementById('uTotalDue');
+
+    function updateURSSAF() {
+      const ca = parseFloat(uCA.value) || 0;
+      const act = uActivity.value;
+
+      let cotisRate = 0.231;
+      let cfpRate = 0.002;
+
+      if (act === 'bic_serv') {
+        cotisRate = 0.212;
+        cfpRate = 0.003;
+      } else if (act === 'vente') {
+        cotisRate = 0.123;
+        cfpRate = 0.001;
+      }
+
+      const cotis = ca * cotisRate;
+      const cfp = ca * cfpRate;
+      const totalDue = cotis + cfp;
+      const net = ca - totalDue;
+
+      uNetPocket.textContent = formatEuro(net);
+      uCotisTotal.textContent = formatEuro(cotis);
+      uCfpAmount.textContent = formatEuro(cfp);
+      uTotalDue.textContent = formatEuro(totalDue);
+    }
+
+    uActivity.addEventListener('change', updateURSSAF);
+    uCA.addEventListener('input', updateURSSAF);
+
+    function formatEuro(num) {
+      return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency: 'EUR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(num);
+    }
+
+    document.querySelectorAll('.faq-question').forEach(q => {
+      q.addEventListener('click', () => {
+        const item = q.closest('.faq-item');
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) {
+          item.classList.add('open');
+        }
+      });
+    });
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastEscape');
+      const toastMsg = document.getElementById('toastEscapeMsg');
+      toastMsg.textContent = msg;
+      toast.classList.add('active');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.remove('active');
+      }, 3500);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.code === 'Escape') {
+        triggerEscapeKeycap();
+      }
+    });
+
+    const macEscBtn = document.getElementById('macEscBtn');
+    macEscBtn.addEventListener('click', () => {
+      triggerEscapeKeycap();
+    });
+
+    function triggerEscapeKeycap() {
+      macEscBtn.classList.add('pressed');
+      setTimeout(() => macEscBtn.classList.remove('pressed'), 200);
+
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+
+      showToast('Touche [Échap] activée : Modales fermées. Retour au calme.');
+    }
+
+    renderCockpit('micro');
+    updateFacturX();
+    updateIK();
+    updateURSSAF();
+  </script>
+</body>
+</html>

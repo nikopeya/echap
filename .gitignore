@@ -1,0 +1,25 @@
+# Secrets et environnement
+.env
+.env.local
+.streamlit/secrets.toml
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite
+*.sqlite3
+
+# Stockage local des pièces testeurs
+storage/tenants/*
+!storage/tenants/.gitkeep
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride

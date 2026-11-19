@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none">
+  <defs>
+    <linearGradient id="favBlkBase" x1="16" y1="4" x2="16" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#27272A" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+    <linearGradient id="favBlkTop" x1="16" y1="5" x2="16" y2="25" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3F3F46" />
+      <stop offset="100%" stop-color="#18181B" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="5" width="28" height="22" rx="5" fill="url(#favBlkBase)" />
+  <path d="M2 23 C2 26 4 27 8 27 H24 C28 27 30 26 30 23 Z" fill="#000000" opacity="0.8" />
+  <rect x="3" y="6" width="26" height="19" rx="4" fill="url(#favBlkTop)" />
+  <path d="M6 7 H26" stroke="#A1A1AA" stroke-width="0.8" stroke-linecap="round" opacity="0.6" />
+  <text x="6.5" y="20.5" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif" font-size="7.5" font-weight="800" fill="#FFFFFF" text-anchor="start" letter-spacing="-0.02em">Echap</text>
+</svg>

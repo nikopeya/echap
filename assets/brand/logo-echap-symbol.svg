@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 180" width="260" height="180" fill="none">
+  <defs>
+    <!-- Soft Apple key well ambient shadow -->
+    <filter id="macBlackShadow" x="-15%" y="-15%" width="130%" height="140%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.18" />
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#000000" flood-opacity="0.12" />
+    </filter>
+    <!-- Keycap outer bezel / depth gradient -->
+    <linearGradient id="blkKeyBase" x1="130" y1="14" x2="130" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#27272A" />
+      <stop offset="70%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+    <!-- Apple chiclet top face gradient: silky smooth matte Space Black finish -->
+    <linearGradient id="blkKeyTop" x1="130" y1="16" x2="130" y2="154" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#3F3F46" />
+      <stop offset="25%" stop-color="#27272A" />
+      <stop offset="85%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#09090B" />
+    </linearGradient>
+    <!-- Subtle inner surface light reflection -->
+    <linearGradient id="blkKeySheen" x1="130" y1="16" x2="130" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+    <!-- Bottom chiclet bevel shadow (shows key travel depth) -->
+    <linearGradient id="blkBottomBevel" x1="130" y1="148" x2="130" y2="164" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#18181B" />
+      <stop offset="100%" stop-color="#000000" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Key Base with shadow -->
+  <rect x="18" y="14" width="224" height="148" rx="20" fill="url(#blkKeyBase)" filter="url(#macBlackShadow)" />
+
+  <!-- 2. Bottom chiclet edge (subtle key depth ~8px) -->
+  <path d="M18 142 C18 154 28 162 40 162 H220 C232 162 242 154 242 142 L242 150 C242 158 232 162 220 162 H40 C28 162 18 158 18 150 Z" fill="url(#blkBottomBevel)" opacity="0.95" />
+
+  <!-- 3. Top chiclet surface -->
+  <rect x="21" y="16" width="218" height="136" rx="17" fill="url(#blkKeyTop)" />
+  <rect x="21" y="16" width="218" height="136" rx="17" fill="url(#blkKeySheen)" />
+
+  <!-- 4. Chiclet rim stroke & top highlight -->
+  <rect x="21" y="16" width="218" height="136" rx="17" stroke="#52525B" stroke-width="1" stroke-opacity="0.45" />
+  <path d="M38 17.5 H222 C228 17.5 233 20 234 24" stroke="#A1A1AA" stroke-width="1.2" stroke-linecap="round" stroke-opacity="0.65" />
+
+  <!-- 5. Legend "Echap" in Bottom-Left (pure white on space black) -->
+  <text x="44" y="122" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', 'Inter', sans-serif" font-size="34" font-weight="700" fill="#FFFFFF" text-anchor="start" letter-spacing="-0.02em">Echap</text>
+</svg>

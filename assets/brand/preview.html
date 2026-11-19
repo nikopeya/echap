@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECHAP — Touche Mac Noire & Libérez-vous</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Palette Principale : Noir, Blanc, et Accent Ambre/Orange */
+      --color-primary-black: #09090B;
+      --color-primary-surface: #18181B;
+      --color-primary-border: #27272A;
+      --color-secondary-white: #FFFFFF;
+      
+      /* Recommandation 2ème couleur secondaire : Orange Ambre Solaire */
+      --color-accent-amber: #EA580C;
+      --color-accent-amber-light: #FFedd5;
+      --color-accent-amber-hover: #C2410C;
+
+      --color-bg-page: #F8FAFC;
+      --color-bg-card: #FFFFFF;
+      --color-border: #E2E8F0;
+      --color-text-main: #09090B;
+      --color-text-secondary: #71717A;
+      --color-text-muted: #A1A1AA;
+
+      /* Semantic status */
+      --status-success-bg: #ECFDF5;
+      --status-success-border: #A7F3D0;
+      --status-success-text: #047857;
+
+      --status-warning-bg: #FFFBEB;
+      --status-warning-border: #FDE68A;
+      --status-warning-text: #B45309;
+
+      --status-danger-bg: #FEF2F2;
+      --status-danger-border: #FECACA;
+      --status-danger-text: #B91C1C;
+
+      --status-neutral-bg: #F4F4F5;
+      --status-neutral-border: #E4E4E7;
+      --status-neutral-text: #52525B;
+
+      --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Plus Jakarta Sans', system-ui, sans-serif;
+      --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--color-bg-page);
+      color: var(--color-text-main);
+      line-height: 1.5;
+      padding: 48px 24px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .badge-status-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--color-primary-black);
+      border: 1px solid var(--color-primary-surface);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 9999px;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-hero-title {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--color-primary-black);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .lead {
+      font-size: 18px;
+      color: var(--color-text-secondary);
+      max-width: 780px;
+    }
+
+    section {
+      background: var(--color-bg-card);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2 .section-num {
+      background: #18181B;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Hero Keycap Showcase */
+    .hero-keycaps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .hero-keycap-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .hero-keycap-card.dark {
+      background: var(--color-primary-black);
+      border-color: #27272A;
+    }
+
+    .keycap-title {
+      margin-top: 20px;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+    }
+
+    .hero-keycap-card.dark .keycap-title {
+      color: #FFFFFF;
+    }
+
+    .keycap-desc {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+      max-width: 280px;
+    }
+
+    .hero-keycap-card.dark .keycap-desc {
+      color: var(--color-text-muted);
+    }
+
+    /* Horizontal Logos */
+    .horizontal-logos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .logo-h-card {
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #FFFFFF;
+      min-height: 130px;
+    }
+
+    .logo-h-card.dark {
+      background: var(--color-primary-black);
+      border-color: #27272A;
+    }
+
+    .logo-caption {
+      margin-top: 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+    }
+
+    .logo-h-card.dark .logo-caption {
+      color: var(--color-text-muted);
+    }
+
+    /* Options Colors Grid */
+    .color-proposals {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .proposal-card {
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #FFFFFF;
+    }
+
+    .proposal-card.recommended {
+      border: 2px solid var(--color-primary-black);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    .reco-tag {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #09090B;
+      color: #FFFFFF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .proposal-color-bar {
+      height: 72px;
+      width: 100%;
+    }
+
+    .proposal-body {
+      padding: 16px;
+    }
+
+    .proposal-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+    }
+
+    .proposal-hex {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 2px;
+    }
+
+    .proposal-desc {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    /* UI Example Card with Black & Accent */
+    .ui-example-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 480px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .ui-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .ui-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+    }
+
+    .ui-card-body {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .ui-card-amount {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--color-primary-black);
+      margin-bottom: 18px;
+    }
+
+    .ui-card-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      font-family: var(--font-body);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+
+    .btn-black {
+      background: var(--color-primary-black);
+      color: #FFFFFF;
+    }
+
+    .btn-black:hover {
+      background: #27272A;
+    }
+
+    .btn-accent {
+      background: var(--color-accent-amber);
+      color: #FFFFFF;
+    }
+
+    .btn-accent:hover {
+      background: var(--color-accent-amber-hover);
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      color: var(--color-primary-black);
+    }
+
+    /* Comparison Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    th {
+      background: #F8FAFC;
+      font-weight: 600;
+      color: var(--color-primary-black);
+    }
+
+    td.good {
+      color: #047857;
+      font-weight: 500;
+    }
+
+    td.bad {
+      color: #B91C1C;
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--color-text-muted);
+      margin-top: 48px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-top">
+        <img src="logo-echap.svg" alt="Logo ECHAP" height="42">
+        <span class="badge-status-top">VERSION NOIRE MAÎTRESSE</span>
+      </div>
+      <div class="brand-hero-title">ECHAP — Libérez-vous.</div>
+      <p class="lead">Identité de marque officielle : la véritable touche Echap rectangulaire de style Mac en Space Black, sans accent, avec la mention calée en bas à gauche, et le mot d'ordre d'émancipation : « Libérez-vous ».</p>
+    </header>
+
+    <!-- SECTION 1 : LOGOTYPE NOIR MAC -->
+    <section>
+      <h2><span class="section-num">01</span> La Touche Echap Mac Noire (Version Principale)</h2>
+      <p style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 24px;">
+        Format rectangulaire chiclet Space Black (ratio 1.4:1) inspiré directement de la touche Escape des claviers Apple Magic Keyboard et MacBook Pro. Inscription <strong>Echap</strong> épurée, calée en bas à gauche, sans accent sur le E et sans trait dessous.
+      </p>
+
+      <div class="hero-keycaps">
+        <!-- Carte 1 : Touche Mac Echap Noire Principale -->
+        <div class="hero-keycap-card">
+          <img src="logo-echap-symbol.svg" alt="Touche Echap Mac Noire" style="width: 220px; height: auto;">
+          <div class="keycap-title">Touche Echap Space Black (Principale)</div>
+          <div class="keycap-desc">Satiné noir mat Apple, biseau de course discret, gravure blanche pure calée en bas à gauche.</div>
+        </div>
+
+        <!-- Carte 2 : Sur Fond Sombre -->
+        <div class="hero-keycap-card dark">
+          <img src="logo-echap-symbol.svg" alt="Touche Echap sur Fond Sombre" style="width: 220px; height: auto;">
+          <div class="keycap-title">Touche Echap sur Fond Sombre</div>
+          <div class="keycap-desc">Reflet zénithal anodisé titane/anthracite pour une présence discrète et haut de gamme.</div>
+        </div>
+      </div>
+
+      <h3 style="font-size: 15px; font-weight: 700; color: var(--color-primary-black); margin: 28px 0 12px 0;">Logos Horizontaux avec la Signature : « Libérez-vous »</h3>
+      <div class="horizontal-logos">
+        <div class="logo-h-card">
+          <img src="logo-echap.svg" alt="ECHAP Logo Horizontal Clair" style="max-width: 280px; height: auto;">
+          <span class="logo-caption">Logo Horizontal — Fond Clair (Touche Noire + « Libérez-vous »)</span>
+        </div>
+        <div class="logo-h-card dark">
+          <img src="logo-echap-dark.svg" alt="ECHAP Logo Horizontal Sombre" style="max-width: 280px; height: auto;">
+          <span class="logo-caption">Logo Horizontal — Fond Sombre (Touche Noire + « Libérez-vous »)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2 : COULEURS SECONDAIRES & PROPOSITIONS -->
+    <section>
+      <h2><span class="section-num">02</span> Palette : Noir, Blanc + Quelle 2ème Couleur Secondaire ?</h2>
+      <p style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 12px;">
+        Le <strong>Noir Carbone (`#09090B`)</strong> est la couleur maîtresse, le <strong>Blanc (`#FFFFFF`)</strong> la première couleur secondaire. Pour la <strong>deuxième couleur secondaire</strong> (couleur d'accent, d'action et d'énergie pour « Libérez-vous »), voici les 4 directions :
+      </p>
+
+      <div class="color-proposals">
+        <!-- Option 1 : Orange Ambre Solaire (Recommandée) -->
+        <div class="proposal-card recommended">
+          <span class="reco-tag">RECOMMANDÉ</span>
+          <div class="proposal-color-bar" style="background: #EA580C;"></div>
+          <div class="proposal-body">
+            <div class="proposal-title">1. Orange Ambre Solaire</div>
+            <div class="proposal-hex">#EA580C / #F59E0B</div>
+            <div class="proposal-desc">
+              <strong>L'énergie de l'action</strong> : inspire le bouton d'action d'Apple Watch Ultra et la touche Echap accentuée des claviers de studio. Donne une vibration moderne, chaleureuse et émancipatrice à côté du noir et blanc.
+            </div>
+          </div>
+        </div>
+
+        <!-- Option 2 : Vert Quitus -->
+        <div class="proposal-card">
+          <div class="proposal-color-bar" style="background: #10B981;"></div>
+          <div class="proposal-body">
+            <div class="proposal-title">2. Vert Quitus / Sérénité</div>
+            <div class="proposal-hex">#10B981 / #059669</div>
+            <div class="proposal-desc">
+              <strong>La tranquillité absolue</strong> : symbolise le feu vert administratif, la conformité validée, le quitus sans redressement et le soulagement de l'entrepreneur.
+            </div>
+          </div>
+        </div>
+
+        <!-- Option 3 : Jaune Volt / Surligneur -->
+        <div class="proposal-card">
+          <div class="proposal-color-bar" style="background: #EAB308;"></div>
+          <div class="proposal-body">
+            <div class="proposal-title">3. Jaune Volt / Surligneur</div>
+            <div class="proposal-hex">#EAB308 / #FACC15</div>
+            <div class="proposal-desc">
+              <strong>L'efficacité brute</strong> : évoque le trait de surligneur qui raye la tâche terminée. Esprit tech minimaliste et tranchant (style Teenage Engineering / Nothing).
+            </div>
+          </div>
+        </div>
+
+        <!-- Option 4 : Terracotta Feutré -->
+        <div class="proposal-card">
+          <div class="proposal-color-bar" style="background: #C2410C;"></div>
+          <div class="proposal-body">
+            <div class="proposal-title">4. Terracotta / Brique Chic</div>
+            <div class="proposal-hex">#C2410C / #9A3412</div>
+            <div class="proposal-desc">
+              <strong>L'élégance architecturale</strong> : réinterprétation feutrée du tampon d'homologation officiel. Un luxe sobre, intemporel et statutaire.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3 : COMPOSANTS D'INTERFACE AVEC NOIR & ACCENT -->
+    <section>
+      <h2><span class="section-num">03</span> Rendu UI Minimal : Noir, Blanc et Touche d’Accent</h2>
+      <p style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 20px;">
+        Exemple avec la base Noir & Blanc et l'accent Orange Ambre Solaire pour le bouton d'action principale (« Libérez-vous ») :
+      </p>
+      <div class="ui-example-card">
+        <div class="ui-card-header">
+          <span class="ui-card-title">Déclaration TVA CA3 — T1 2026</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px; background: #FFF7ED; border: 1px solid #FFEDD5; color: #EA580C; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;">
+            ● Prêt pour validation
+          </span>
+        </div>
+        <div class="ui-card-body">
+          Période : 01/01/2026 au 31/03/2026<br>
+          Échéance légale : 19 mai 2026 • 24 factures rapprochées déterministes
+        </div>
+        <div class="ui-card-amount">1 450,00 € <span style="font-size: 12px; color: var(--color-text-secondary); font-weight: normal;">net à payer</span></div>
+        <div class="ui-card-actions">
+          <button class="btn btn-black">Valider & Exporter</button>
+          <button class="btn btn-accent">Libérez-vous</button>
+          <button class="btn btn-secondary">Détail des pièces</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4 : NOUVELLE LIGNE ÉDITORIALE -->
+    <section>
+      <h2><span class="section-num">04</span> Signature de Marque & Style Éditorial</h2>
+      <p style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 16px;">
+        Remplacement de la mention institutionnelle plate par l'appel à l'émancipation directe :
+      </p>
+      <div style="background: #18181B; color: #FFFFFF; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px;">
+        <div style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A1A1AA; font-weight: 700; margin-bottom: 4px;">Signature Maîtresse</div>
+        <div style="font-size: 22px; font-weight: 800; font-family: var(--font-display);">ECHAP — Libérez-vous.</div>
+        <div style="font-size: 14px; color: #D4D4D8; margin-top: 6px;">L'assistant qui débarrasse définitivement les entrepreneurs de la paperasse.</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Situation</th>
+            <th>Ton ECHAP (Direct, Émancipateur & Calme)</th>
+            <th>À proscrire (Plat ou Paternaliste)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Justificatif manquant</strong></td>
+            <td class="good">« Facture Qonto du 12 mai rapprochée. Le justificatif PDF est requis pour déduire la TVA (42,00 €). »</td>
+            <td class="bad">« Cher utilisateur, l'assistant administratif a détecté une anomalie dans vos justificatifs. »</td>
+          </tr>
+          <tr>
+            <td><strong>Déclaration prête</strong></td>
+            <td class="good">« Déclaration CA3 prête. Net à payer : 1 450,00 €. Validez pour vous libérer de l'échéance. »</td>
+            <td class="bad">« Traitement de votre formalité réglementaire terminé par le système. »</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      <p>ECHAP — Identité de marque officielle • Touche Mac Noire • « Libérez-vous ».</p>
+    </footer>
+  </div>
+</body>
+</html>
