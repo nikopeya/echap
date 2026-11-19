@@ -154,6 +154,13 @@ CONNAISSANCES MÉTIER SPÉCIFIQUES :
 
 
 from packages.paperasse.sources_publiques import search_companies, search_pcg, calculate_ik
+from packages.paperasse.calculateurs import (
+    calculer_is,
+    calculer_amortissement,
+    calculer_acomptes_tva,
+    calculer_impot_revenu,
+    analyser_fec_content
+)
 
 TOOLS = [
     {
@@ -203,6 +210,45 @@ TOOLS = [
                     "electrique": {"type": "boolean", "description": "Véhicule électrique"}
                 },
                 "required": ["cv", "km"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "calculateur_financier",
+            "description": "Exécute les calculs financiers et fiscaux déterministes certifiés selon la réglementation française : impôt sur les sociétés (IS 15%/25% et acomptes), amortissement linéaire PCG 2026 (prorata temporis), acomptes de TVA du réel simplifié (55%/40%), ou impôt sur le revenu (IR 2026 barème officiel).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string",
+                        "enum": ["impot_societes", "amortissement", "acomptes_tva", "impot_revenu"],
+                        "description": "Type d'opération de calcul"
+                    },
+                    "resultat_fiscal": {"type": "number", "description": "Bénéfice fiscal imposable (pour l'IS)"},
+                    "valeur_brute_ht": {"type": "number", "description": "Montant HT pour amortissement"},
+                    "duree_annees": {"type": "integer", "description": "Durée d'amortissement en années (ex: 3, 5)"},
+                    "mois_mise_en_service": {"type": "integer", "description": "Mois de mise en service (1 à 12, pour prorata)"},
+                    "tva_n_moins_1": {"type": "number", "description": "TVA due N-1 pour les acomptes semestriels"},
+                    "revenu_net_imposable": {"type": "number", "description": "Revenu net imposable annuel pour l'IR"},
+                    "nb_parts": {"type": "number", "description": "Nombre de parts de quotient familial"}
+                },
+                "required": ["operation"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "analyser_fec",
+            "description": "Analyse un Fichier des Écritures Comptables (FEC) pour contrôler sa conformité à l'art. A.47 A-1 du LPF (18 colonnes obligatoires, équilibre débits/crédits, détection d'irrégularités ou dépenses personnelles).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "contenu_fec": {"type": "string", "description": "Texte ou lignes du FEC à contrôler"}
+                },
+                "required": ["contenu_fec"]
             }
         }
     },
@@ -269,6 +315,29 @@ def execute_tool(name: str, args: Dict[str, Any], user_id: Optional[int] = None)
         elec = args.get("electrique", False)
         ik = calculate_ik(cv, km, elec)
         return json.dumps(ik, ensure_ascii=False)
+    elif name == "calculateur_financier":
+        op = args.get("operation")
+        if op == "impot_societes":
+            res_calc = calculer_is(args.get("resultat_fiscal", 0.0))
+        elif op == "amortissement":
+            res_calc = calculer_amortissement(
+                args.get("valeur_brute_ht", 0.0),
+                args.get("duree_annees", 3),
+                args.get("mois_mise_en_service", 1)
+            )
+        elif op == "acomptes_tva":
+            res_calc = calculer_acomptes_tva(args.get("tva_n_moins_1", 0.0))
+        elif op == "impot_revenu":
+            res_calc = calculer_impot_revenu(
+                args.get("revenu_net_imposable", 0.0),
+                args.get("nb_parts", 1.0)
+            )
+        else:
+            res_calc = {"error": f"Opération {op} inconnue"}
+        return json.dumps(res_calc, ensure_ascii=False)
+    elif name == "analyser_fec":
+        res_fec = analyser_fec_content(args.get("contenu_fec", ""))
+        return json.dumps(res_fec, ensure_ascii=False)
     elif name == "enregistrer_facture":
         if user_id:
             from packages.paperasse.auth_db import create_and_record_invoice

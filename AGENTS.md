@@ -70,10 +70,24 @@ Les registres communs sont protégés par le même mécanisme :
   python3 tools/agent_lock.py recover --session "<session_propriétaire>" --acquired "<timestamp_acquisition>" --confirm-stopped <fichiers...>
   ```
 
-### Règles de sécurité et intégrité
+### Règles de sécurité, intégrité et intégration Git (compatible multi-agents)
 
-- **Séparation des fichiers** : deux sessions peuvent modifier des fichiers distincts simultanément sans se bloquer.
-- **Pas de commit non autorisé** : sans commit initial sur `main`, ne pas créer de commit initial, branche, merge ou push sans demande explicite du porteur.
+- **Séparation stricte des fichiers** : deux sessions peuvent modifier des fichiers distincts simultanément sans se bloquer.
+- **Interdiction absolue de `git add .` ou `git add -A`** : afin de ne jamais capturer les modifications en cours d'une autre session travaillant dans le même arbre, une session doit **uniquement stager ses propres fichiers réservés** :
+  ```bash
+  git add <fichiers_modifies_sous_verrou> docs/SUIVI.md
+  ```
+- **Validation préalable obligatoire** : avant tout commit, la session doit obligatoirement valider l'exécution de la suite de tests (`python3 -m unittest discover tests`). Interdiction de commiter si un test échoue.
+- **Commit et push vers GitHub (`origin/main`)** :
+  1. Le dépôt distant GitHub officiel est configuré (`origin` -> `https://github.com/nikopeya/echap`).
+  2. Une fois la tâche terminée, testée et consignée dans `docs/SUIVI.md`, la session commite ses fichiers spécifiques avec un message conventionnel clair (ex: `feat(onboarding): ...`, `fix(brand): ...`).
+  3. La session libère immédiatement ses verrous applicatifs (`python3 tools/agent_lock.py release`).
+  4. La session synchronise avec le dépôt distant pour alimenter le déploiement continu Streamlit Cloud :
+     ```bash
+     git pull --rebase origin main
+     git push origin main
+     ```
+  5. En cas de concurrence sur le remote, `git pull --rebase origin main` réapplique le commit local proprement. Ne jamais utiliser de push forcé (`--force`).
 - **En cas de conflit inattendu** : ne jamais écraser ou restaurer brutalement un fichier. Comparer les versions, conserver le travail utile et signaler toute incohérence.
 
 ## Conventions d’implémentation
@@ -104,7 +118,7 @@ Les registres communs sont protégés par le même mécanisme :
 - À l’initialisation, aucune commande applicative de test, lint ou typecheck n’existe. Ne pas inventer un succès ni installer une stack pour vérifier du Markdown.
 - À l’adoption de la stack, consigner ici les commandes exactes validées pour installation, tests, lint et typecheck ; demander les commandes manquantes si nécessaire.
 - Une impossibilité de vérification ou un blocage est explicite et reste ouvert dans le suivi.
-- Ne pas créer de commit, pousser, modifier la configuration Git ni publier sans demande explicite. Ne pas créer de licence sans arbitrage.
+- Intégration Git : dès que les tests passent et que `docs/SUIVI.md` est à jour, commiter uniquement les fichiers de la tâche et pousser sur `origin main` selon le protocole ci-dessus. Ne pas créer de licence sans arbitrage.
 
 ## Évolution de ces conventions
 
