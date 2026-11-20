@@ -89,41 +89,62 @@ if st.session_state.user is None:
     with col_center:
         st.markdown(render_brand_login_header(), unsafe_allow_html=True)
 
-        auth_mode = st.radio("Mode d'accès", ["Connexion", "Créer un compte"], horizontal=True, label_visibility="collapsed")
+        auth_mode = st.radio(
+            "Mode d'accès",
+            ["Connexion", "Créer un compte"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="auth_mode",
+        )
 
         if auth_mode == "Connexion":
-            username = st.text_input("Identifiant", key="login_username", placeholder="Votre identifiant")
-            password = st.text_input("Mot de passe", type="password", key="login_password", placeholder="Votre mot de passe")
-            st.write("")
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                if st.button("Se connecter", use_container_width=True, type="primary"):
+            with st.form("form_login", clear_on_submit=False, border=False):
+                username = st.text_input("Identifiant", key="login_username", placeholder="Votre identifiant")
+                password = st.text_input("Mot de passe", type="password", key="login_password", placeholder="Votre mot de passe")
+                st.write("")
+                login_submit = st.form_submit_button("Se connecter", use_container_width=True, type="primary")
+
+            if login_submit:
+                if not username.strip() or not password:
+                    st.error("Renseignez votre identifiant et votre mot de passe.")
+                else:
                     user = authenticate_user(username, password)
                     if user:
                         st.session_state.user = user
                         st.rerun()
                     else:
                         st.error("Identifiant ou mot de passe incorrect.")
-            with col_b2:
-                if st.button("⚡ Accès démo", use_container_width=True):
-                    demo_user = authenticate_user("testeur1", "test1234")
-                    if demo_user:
-                        st.session_state.user = demo_user
-                        st.rerun()
+
+            if st.button("Accès démo", use_container_width=True, key="demo_access"):
+                demo_user = authenticate_user("testeur1", "test1234")
+                if demo_user:
+                    st.session_state.user = demo_user
+                    st.rerun()
+
             st.caption("Comptes : `testeur1`, `testeur2`, `testeur3` (mot de passe: `test1234`)")
 
         else:
-            reg_name = st.text_input("Prénom et Nom", placeholder="Ex : Alexandre Martin")
-            reg_user = st.text_input("Identifiant", placeholder="Identifiant souhaité")
-            reg_pass = st.text_input("Mot de passe", type="password", placeholder="Mot de passe")
-            st.write("")
-            if st.button("Créer mon compte", use_container_width=True, type="primary"):
-                res = register_user(reg_user, reg_pass, full_name=reg_name)
-                if "error" in res:
-                    st.error(res["error"])
+            with st.form("form_register", clear_on_submit=False, border=False):
+                reg_name = st.text_input("Prénom et Nom", key="reg_name", placeholder="Ex : Alexandre Martin")
+                reg_user = st.text_input("Identifiant", key="reg_user", placeholder="Identifiant souhaité")
+                reg_pass = st.text_input("Mot de passe", type="password", key="reg_pass", placeholder="Mot de passe")
+                st.write("")
+                register_submit = st.form_submit_button("Créer mon compte", use_container_width=True, type="primary")
+
+            if register_submit:
+                if not reg_user.strip():
+                    st.error("Choisissez un identifiant.")
+                elif len(reg_pass) < 6:
+                    st.error("Le mot de passe doit contenir au moins 6 caractères.")
                 else:
-                    st.session_state.user = res
-                    st.rerun()
+                    with st.spinner("Création de votre espace..."):
+                        res = register_user(reg_user, reg_pass, full_name=reg_name)
+                    if "error" in res:
+                        st.error(res["error"])
+                    else:
+                        st.session_state.user = res
+                        st.session_state.active_nav = "Assistant"
+                        st.rerun()
 
     st.stop()
 

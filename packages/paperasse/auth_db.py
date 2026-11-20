@@ -7,18 +7,48 @@ import os
 import sqlite3
 import hashlib
 import secrets
+import threading
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 DB_PATH = os.path.join(DATA_DIR, "echap_mtp.sqlite")
 
+_schema_ready = False
+_schema_lock = threading.Lock()
+
 
 def get_db_connection() -> sqlite3.Connection:
-    """Initialise et retourne la connexion à la base de données persistante."""
+    """
+    Retourne une connexion à la base de données persistante.
+    Le schéma et les migrations ne sont vérifiés qu'une seule fois par processus,
+    afin que chaque requête reste rapide (surtout sur un disque distant).
+    """
+    global _schema_ready
     os.makedirs(DATA_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=20)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA busy_timeout=20000")
+    except Exception:
+        pass
+
+    if not _schema_ready:
+        with _schema_lock:
+            if not _schema_ready:
+                _init_schema()
+                _schema_ready = True
+    return conn
+
+
+def _init_schema() -> None:
+    """Crée et migre le schéma de la base (exécuté une seule fois par processus)."""
+    conn = sqlite3.connect(DB_PATH, timeout=20)
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode=WAL")
+    except Exception:
+        pass
     with conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -283,7 +313,7 @@ def get_db_connection() -> sqlite3.Connection:
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
-    return conn
+    conn.close()
 
 
 def hash_password(password: str, salt: Optional[str] = None) -> tuple[str, str]:
