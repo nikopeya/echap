@@ -1,2 +1,1 @@
-nodejs
-npm
+# Aucune dépendance système requise (calculs et documents 100 % Python).
