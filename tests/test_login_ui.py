@@ -54,6 +54,39 @@ class TestLoginUI(unittest.TestCase):
         errors = [e.value for e in at.error]
         self.assertTrue(any("au moins 6 caractères" in e for e in errors), errors)
 
+    def test_register_existing_identifier_with_correct_password_logs_in(self):
+        """Une inscription rejouée après un affichage manqué ouvre la session."""
+        username = _unique_username("uitest")
+        first = AppTest.from_file(APP_PATH, default_timeout=60)
+        first.run()
+        self._register_account(first, username, "test1234", "Test Doublon")
+
+        # Nouvelle session : comme après un rafraîchissement de la page.
+        again = AppTest.from_file(APP_PATH, default_timeout=60)
+        again.run()
+        self._register_account(again, username, "test1234", "Test Doublon")
+
+        user = again.session_state.get("user")
+        self.assertIsNotNone(user, "Le compte existant doit être ouvert, pas refusé.")
+        self.assertEqual(user["username"], username)
+        infos = [i.value for i in again.info]
+        self.assertTrue(any("existait déjà" in i for i in infos), infos)
+
+    def test_register_existing_identifier_with_wrong_password_is_refused(self):
+        """Un identifiant existant et un mauvais mot de passe restent refusés."""
+        username = _unique_username("uitest")
+        first = AppTest.from_file(APP_PATH, default_timeout=60)
+        first.run()
+        self._register_account(first, username, "test1234", "Test Doublon")
+
+        again = AppTest.from_file(APP_PATH, default_timeout=60)
+        again.run()
+        self._register_account(again, username, "autre123", "Test Doublon")
+
+        self.assertIsNone(again.session_state.get("user"))
+        errors = [e.value for e in again.error]
+        self.assertTrue(any("déjà utilisé" in e for e in errors), errors)
+
     def test_login_with_demo_account(self):
         """Le formulaire de connexion ouvre bien la session du compte démo."""
         at = AppTest.from_file(APP_PATH, default_timeout=60)

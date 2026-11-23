@@ -139,6 +139,19 @@ if st.session_state.user is None:
                 else:
                     with st.spinner("Création de votre espace..."):
                         res = register_user(reg_user, reg_pass, full_name=reg_name)
+
+                    # Si l'identifiant existe déjà, une tentative précédente a pu créer
+                    # le compte sans que l'affichage aboutisse (session perdue ou
+                    # rafraîchissement). Avec le bon mot de passe, on ouvre la session
+                    # au lieu de bloquer l'utilisateur sur « identifiant déjà utilisé ».
+                    if "error" in res and "déjà utilisé" in res["error"]:
+                        existing = authenticate_user(reg_user, reg_pass)
+                        if existing:
+                            res = existing
+                            st.session_state.auth_notice = (
+                                "Ce compte existait déjà : vous êtes connecté à votre espace."
+                            )
+
                     if "error" in res:
                         st.error(res["error"])
                     else:
@@ -156,6 +169,9 @@ user = st.session_state.user
 user_id = user["id"]
 user_fullname = user.get("full_name") or user.get("username")
 username = user["username"]
+
+if st.session_state.pop("auth_notice", None):
+    st.info("Ce compte existait déjà : vous êtes connecté à votre espace. Si ce n'est pas le vôtre, déconnectez-vous et choisissez un autre identifiant.")
 
 # Récupération des structures associées à l'utilisateur
 user_entities = get_user_entities(user_id)
