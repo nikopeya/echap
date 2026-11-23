@@ -304,6 +304,7 @@ def _init_schema() -> None:
             CREATE TABLE IF NOT EXISTS company_deadlines (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
+                entity_id INTEGER DEFAULT NULL,
                 label TEXT NOT NULL,
                 date TEXT NOT NULL,
                 urgency TEXT NOT NULL,
