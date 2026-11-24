@@ -96,7 +96,12 @@ def build_unified_system_prompt(company_name: str, user_query: str = "", company
 
         # Règles fiscales automatiques dérivées
         tva_directive = ""
-        if "Franchise" in reg_tva or "293" in reg_tva:
+        if "261" in reg_tva:
+            tva_directive = (
+                "- ATTENTION TVA (EXONÉRATION - ART. 261 D CGI) : L'activité de location nue est exonérée de TVA. "
+                "Taux de TVA = 0%. Tu DOIS OBLIGATOIREMENT inscrire la mention légale : 'TVA non applicable, article 261 D du Code Général des Impôts' sur chaque facture ou quittance."
+            )
+        elif "Franchise" in reg_tva or "293" in reg_tva:
             tva_directive = (
                 "- ATTENTION TVA (FRANCHISE EN BASE - ART. 293 B CGI) : L'entreprise est exonérée de TVA. "
                 "Taux de TVA = 0%. Tu DOIS OBLIGATOIREMENT inscrire la mention légale : 'TVA non applicable, article 293 B du Code Général des Impôts' sur chaque facture ou devis."

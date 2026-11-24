@@ -22,6 +22,18 @@ from packages.paperasse.sources_publiques import (
     search_pcg,
     calculate_ik
 )
+from packages.paperasse.onboarding import (
+    TVA_EXONERATION_261D,
+    TVA_TITLE,
+    apply_company_to_draft,
+    company_suggestion_label,
+    legal_forms_for,
+    missing_identity_fields,
+    role_options,
+    select_structure,
+    tva_choices,
+    tva_subtitle,
+)
 from packages.paperasse.auth_db import (
     authenticate_user,
     register_user,
@@ -293,12 +305,7 @@ if not user_entities or is_adding_entity:
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("Je travaille à mon compte", key="btn_choose_micro", use_container_width=True):
-                    draft["structure_type"] = "micro_enterprise"
-                    draft["legal_form"] = "Micro-entreprise"
-                    draft["name"] = f"{user_fullname} EI" if user_fullname else "Mon Activité Indépendante"
-                    draft["regime_tva"] = "Franchise en base de TVA (art. 293 B du CGI - exonéré)"
-                    draft["regime_imposition"] = "IR"
-                    draft["president_role"] = "Entrepreneur individuel"
+                    select_structure(draft, "micro_enterprise", user_fullname)
                     st.session_state.ob_step = 2
                     st.rerun()
 
@@ -311,11 +318,7 @@ if not user_entities or is_adding_entity:
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("J'ai créé une société", key="btn_choose_company", use_container_width=True):
-                    draft["structure_type"] = "company"
-                    draft["legal_form"] = "SAS"
-                    draft["regime_tva"] = "Réel normal (20%)"
-                    draft["regime_imposition"] = "IS"
-                    draft["president_role"] = "Président"
+                    select_structure(draft, "company", user_fullname)
                     st.session_state.ob_step = 2
                     st.rerun()
 
@@ -329,9 +332,7 @@ if not user_entities or is_adding_entity:
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("Je gère un bien immobilier", key="btn_choose_sci", use_container_width=True):
-                    draft["structure_type"] = "sci"
-                    draft["legal_form"] = "SCI"
-                    draft["president_role"] = "Gérant"
+                    select_structure(draft, "sci", user_fullname)
                     st.session_state.ob_step = 2
                     st.rerun()
 
@@ -344,10 +345,7 @@ if not user_entities or is_adding_entity:
                 </div>
                 """, unsafe_allow_html=True)
                 if st.button("J'exerce un métier réglementé", key="btn_choose_liberal", use_container_width=True):
-                    draft["structure_type"] = "liberal"
-                    draft["legal_form"] = "Profession libérale (BNC)"
-                    draft["regime_imposition"] = "IR"
-                    draft["president_role"] = "Titulaire libéral"
+                    select_structure(draft, "liberal", user_fullname)
                     st.session_state.ob_step = 2
                     st.rerun()
 
@@ -359,12 +357,7 @@ if not user_entities or is_adding_entity:
             </div>
             """, unsafe_allow_html=True)
             if st.button("Je ne sais pas encore", key="btn_choose_unknown", use_container_width=True):
-                draft["structure_type"] = "micro_enterprise"
-                draft["legal_form"] = "Micro-entreprise"
-                draft["name"] = f"{user_fullname} EI" if user_fullname else "Mon Activité Indépendante"
-                draft["regime_tva"] = "Franchise en base de TVA (art. 293 B du CGI - exonéré)"
-                draft["regime_imposition"] = "IR"
-                draft["president_role"] = "Entrepreneur individuel"
+                select_structure(draft, "micro_enterprise", user_fullname)
                 st.session_state.ob_step = 2
                 st.rerun()
 
@@ -375,7 +368,7 @@ if not user_entities or is_adding_entity:
             stype = draft.get("structure_type", "company")
 
             if stype == "micro_enterprise":
-                st.markdown(f"""
+                st.markdown("""
                 <div class="ob-title">Sous quel nom allez-vous facturer ?</div>
                 <div class="ob-subtitle">À votre compte, il n'y a pas de nom de société à inventer : c'est votre <strong>nom et prénom</strong> qui apparaissent sur vos factures.</div>
                 """, unsafe_allow_html=True)
@@ -383,25 +376,49 @@ if not user_entities or is_adding_entity:
                 draft["name"] = st.text_input(
                     "Nom affiché sur vos factures :",
                     value=draft.get("name") or (f"{user_fullname} EI" if user_fullname else "Mon Activité"),
-                    help="Par exemple : votre nom et prénom, suivi de « EI » (entrepreneur individuel)."
+                    help="Par exemple : votre nom et prénom, suivi de « EI » (entrepreneur individuel).",
+                    key="ob_micro_name",
                 )
-                draft["activity_label"] = st.text_input("Qu'est-ce que vous vendez ? (optionnel) :", value=draft.get("activity_label", ""), placeholder="Ex : sites web, coaching, retouche photo…")
-
-                with st.expander("Vous avez déjà un numéro SIREN ? (optionnel)", expanded=False):
-                    st.caption("Si votre activité est déjà déclarée, indiquez-le : ÉCHAP récupérera vos informations officielles.")
-                    draft["siren"] = st.text_input("Numéro SIREN (9 chiffres) :", value=draft.get("siren", ""), placeholder="Ex: 123456789")
-                    draft["address"] = st.text_input("Adresse professionnelle :", value=draft.get("address", ""))
-                    col_cp, col_ci = st.columns(2)
-                    with col_cp:
-                        draft["postal_code"] = st.text_input("Code postal :", value=draft.get("postal_code", ""))
-                    with col_ci:
-                        draft["city"] = st.text_input("Ville :", value=draft.get("city", ""))
+                draft["activity_label"] = st.text_input(
+                    "Qu'est-ce que vous vendez ?",
+                    value=draft.get("activity_label", ""),
+                    placeholder="Ex : sites web, coaching, retouche photo…",
+                    key="ob_micro_activity",
+                )
+                draft["address"] = st.text_input(
+                    "Adresse professionnelle :",
+                    value=draft.get("address", ""),
+                    placeholder="Ex : 12 rue de la Paix",
+                    key="ob_micro_address",
+                )
+                col_cp, col_ci = st.columns(2)
+                with col_cp:
+                    draft["postal_code"] = st.text_input(
+                        "Code postal :", value=draft.get("postal_code", ""), key="ob_micro_cp"
+                    )
+                with col_ci:
+                    draft["city"] = st.text_input(
+                        "Ville :", value=draft.get("city", ""), key="ob_micro_city"
+                    )
+                with st.expander("Numéros officiels (optionnel)", expanded=False):
+                    st.caption("Si votre activité est déjà déclarée, ces numéros seront vérifiés et utilisés sur vos factures.")
+                    col_siren, col_siret = st.columns(2)
+                    with col_siren:
+                        draft["siren"] = st.text_input(
+                            "SIREN (9 chiffres) :", value=draft.get("siren", ""),
+                            placeholder="Ex : 123456789", key="ob_micro_siren"
+                        )
+                    with col_siret:
+                        draft["siret"] = st.text_input(
+                            "SIRET (14 chiffres) :", value=draft.get("siret", ""),
+                            placeholder="Ex : 12345678900012", key="ob_micro_siret"
+                        )
 
             else:
                 titles = {
-                    "company": ("Trouvons votre société", "Tapez le numéro SIREN (9 chiffres) ou le nom de votre société : ÉCHAP récupère les informations officielles à votre place."),
-                    "sci": ("Trouvons votre SCI", "Tapez le numéro SIREN (9 chiffres) ou le nom de votre SCI : ÉCHAP récupère les informations officielles à votre place."),
-                    "liberal": ("Trouvons votre activité", "Tapez le numéro SIREN (9 chiffres) ou le nom de votre cabinet : ÉCHAP récupère les informations officielles à votre place."),
+                    "company": ("Trouvons votre société", "Tapez le nom ou le numéro SIREN puis appuyez sur Entrée : les suggestions de l'Annuaire officiel apparaissent automatiquement."),
+                    "sci": ("Trouvons votre SCI", "Tapez le nom ou le numéro SIREN puis appuyez sur Entrée : les suggestions de l'Annuaire officiel apparaissent automatiquement."),
+                    "liberal": ("Trouvons votre activité", "Tapez le nom ou le numéro SIREN puis appuyez sur Entrée : les suggestions de l'Annuaire officiel apparaissent automatiquement."),
                 }
                 head_title, head_sub = titles.get(stype, titles["company"])
                 st.markdown(f"""
@@ -409,58 +426,111 @@ if not user_entities or is_adding_entity:
                 <div class="ob-subtitle">{head_sub}</div>
                 """, unsafe_allow_html=True)
 
-                col_s1, col_s2 = st.columns([4, 1])
-                with col_s1:
-                    s_query = st.text_input("SIREN ou nom de la structure :", value="", placeholder="Ex : 952981363, ou le nom de votre structure", label_visibility="collapsed")
-                with col_s2:
-                    btn_find = st.button("🔍 Rechercher", use_container_width=True)
+                s_query = st.text_input(
+                    "Nom ou SIREN de la structure :",
+                    value=st.session_state.get("ob_query", ""),
+                    placeholder="Ex : 952981363 ou le nom de votre structure",
+                    label_visibility="collapsed",
+                    key=f"ob_company_query_{stype}",
+                )
+                query = s_query.strip()
 
-                if s_query:
-                    st.session_state.ob_query = s_query
+                if not query:
+                    st.session_state.ob_results = []
+                    st.session_state.ob_last_query = ""
+                elif st.session_state.get("ob_last_query") != query:
+                    with st.spinner("Recherche dans l'Annuaire officiel des entreprises..."):
+                        st.session_state.ob_results = search_companies(query, limit=5)
+                    st.session_state.ob_last_query = query
+                    st.session_state.ob_query = query
+                    # Nouvelle liste de suggestions : nouvelle clé de widget pour
+                    # ne pas réappliquer automatiquement un ancien choix au retour.
+                    st.session_state.ob_suggestion_nonce = st.session_state.get("ob_suggestion_nonce", 0) + 1
 
-                if s_query and btn_find:
-                    with st.spinner("Recherche au registre officiel..."):
-                        st.session_state.ob_results = search_companies(s_query, limit=3)
+                results = st.session_state.get("ob_results") or []
+                if query and st.session_state.get("ob_last_query") == query:
+                    if results:
+                        st.caption("Suggestions automatiques issues de l'Annuaire officiel. Choisissez la bonne structure.")
+                        option_indexes = list(range(len(results)))
+                        selected = st.selectbox(
+                            "Suggestions",
+                            option_indexes,
+                            index=None,
+                            format_func=lambda i: company_suggestion_label(results[i]),
+                            placeholder="Sélectionnez une structure dans les suggestions…",
+                            label_visibility="collapsed",
+                            key=(
+                                f"ob_suggestion_{stype}_"
+                                f"{st.session_state.get('ob_suggestion_nonce', 0)}"
+                            ),
+                        )
+                        if selected is not None:
+                            apply_company_to_draft(draft, results[selected], user_fullname)
+                            st.session_state.ob_results = []
+                            st.session_state.ob_last_query = ""
+                            st.session_state.ob_query = draft.get("name", "")
+                            st.session_state.ob_step = 3
+                            st.rerun()
+                    else:
+                        st.info("Aucune structure trouvée. Vous pouvez la créer à la main ci-dessous.")
 
-                if st.session_state.get("ob_results"):
-                    st.write("")
-                    for idx, comp in enumerate(st.session_state.ob_results):
-                        with st.container():
-                            st.markdown(f"""
-                            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
-                                <div style="font-weight: 700; color: #09090b;">{comp.get('nom_complet')} <span style="font-family: monospace; font-size: 0.85rem; color: #64748b;">(SIREN {comp.get('siren')})</span></div>
-                                <div style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">📍 {comp.get('adresse', '')}, {comp.get('code_postal', '')} {comp.get('ville', '')}</div>
-                            </div>
-                            """, unsafe_allow_html=True)
-                            if st.button(f"⚡ Sélectionner « {comp.get('nom_complet')} »", key=f"sel_comp_step2_{idx}", use_container_width=True):
-                                draft["name"] = comp.get("nom_complet", "")
-                                draft["siren"] = comp.get("siren", "")
-                                draft["siret"] = comp.get("siret", "")
-                                draft["address"] = comp.get("adresse", "")
-                                draft["postal_code"] = comp.get("code_postal", "")
-                                draft["city"] = comp.get("ville", "")
-                                draft["activity_code"] = comp.get("activite_principale", "")
-                                draft["activity_label"] = comp.get("libelle_activite", "")
-                                for d in comp.get("dirigeants", []):
-                                    if any(k in (d.get("qualite") or "") for k in ["Président", "Gérant", "Directeur"]):
-                                        draft["president"] = f"{d.get('prenoms') or ''} {d.get('nom') or ''}".strip()
-                                        break
-                                st.session_state.ob_results = None
-                                st.session_state.ob_step = 3
-                                st.rerun()
-
-                with st.expander("Ou remplir à la main (si la structure est en cours de création)", expanded=not bool(draft.get("name"))):
-                    draft["name"] = st.text_input("Nom de la structure :", value=draft.get("name", ""))
-                    forms_by_type = {
-                        "company": ["SAS", "SASU", "SARL", "EURL"],
-                        "sci": ["SCI"],
-                        "liberal": ["Profession libérale (BNC)"],
-                    }
-                    all_forms = forms_by_type.get(stype, forms_by_type["company"])
-                    form_idx = all_forms.index(draft.get("legal_form", all_forms[0])) if draft.get("legal_form") in all_forms else 0
+                with st.expander(
+                    "Ou remplir à la main (structure en cours de création)",
+                    expanded=not bool(draft.get("name")) and not results,
+                ):
+                    draft["name"] = st.text_input(
+                        "Nom de la structure :",
+                        value=draft.get("name", ""),
+                        key=f"ob_manual_name_{stype}",
+                    )
+                    all_forms = legal_forms_for(stype)
                     if len(all_forms) > 1:
-                        draft["legal_form"] = st.selectbox("Forme juridique :", all_forms, index=form_idx)
-                    draft["siren"] = st.text_input("Numéro SIREN (optionnel si pas encore immatriculé) :", value=draft.get("siren", ""))
+                        form_idx = (
+                            all_forms.index(draft["legal_form"])
+                            if draft.get("legal_form") in all_forms
+                            else 0
+                        )
+                        draft["legal_form"] = st.selectbox(
+                            "Forme juridique :", all_forms, index=form_idx,
+                            key=f"ob_manual_form_{stype}"
+                        )
+                    else:
+                        draft["legal_form"] = all_forms[0]
+                        st.caption(f"Forme juridique : {all_forms[0]}")
+                    col_siren, col_siret = st.columns(2)
+                    with col_siren:
+                        draft["siren"] = st.text_input(
+                            "SIREN (optionnel si pas encore immatriculé) :",
+                            value=draft.get("siren", ""),
+                            key=f"ob_manual_siren_{stype}",
+                        )
+                    with col_siret:
+                        draft["siret"] = st.text_input(
+                            "SIRET (optionnel) :",
+                            value=draft.get("siret", ""),
+                            key=f"ob_manual_siret_{stype}",
+                        )
+                    draft["activity_label"] = st.text_input(
+                        "Activité (ex : conseil, bâtiment, location…) :",
+                        value=draft.get("activity_label", ""),
+                        key=f"ob_manual_activity_{stype}",
+                    )
+                    draft["address"] = st.text_input(
+                        "Adresse du siège :",
+                        value=draft.get("address", ""),
+                        key=f"ob_manual_address_{stype}",
+                    )
+                    col_cp, col_ci = st.columns(2)
+                    with col_cp:
+                        draft["postal_code"] = st.text_input(
+                            "Code postal :", value=draft.get("postal_code", ""),
+                            key=f"ob_manual_cp_{stype}"
+                        )
+                    with col_ci:
+                        draft["city"] = st.text_input(
+                            "Ville :", value=draft.get("city", ""),
+                            key=f"ob_manual_city_{stype}"
+                        )
 
             st.write("")
             col_b1, col_b2 = st.columns([1, 2])
@@ -472,65 +542,48 @@ if not user_entities or is_adding_entity:
                 if st.button("Continuer ➔", type="primary", use_container_width=True):
                     if not draft.get("name", "").strip():
                         typed = (st.session_state.get("ob_query") or "").strip()
-                        if typed and not typed.isdigit():
+                        if typed and not typed.replace(" ", "").isdigit():
                             draft["name"] = typed
-                        else:
-                            draft["name"] = f"{user_fullname} ({draft.get('legal_form', 'Structure')})"
-                    st.session_state.ob_step = 3
-                    st.rerun()
+                    missing = missing_identity_fields(draft)
+                    if missing:
+                        st.warning(
+                            "Il manque "
+                            + ", ".join(missing)
+                            + ". Ces informations sont nécessaires pour émettre des factures conformes."
+                        )
+                    else:
+                        st.session_state.ob_step = 3
+                        st.rerun()
 
         # ----------------------------------------------------------------------
-        # QUESTION 3 : FACTUREZ-VOUS DE LA TVA ? (3 GROSSES CARTES)
+        # QUESTION 3 : RÉGIME DE TVA ADAPTÉ À LA STRUCTURE
         # ----------------------------------------------------------------------
         elif current_step == 3:
-            st.markdown("""
-            <div class="ob-title">Ajoutez-vous de la TVA sur vos factures ?</div>
-            <div class="ob-subtitle">Si vous ne savez pas : la plupart des indépendants qui démarrent n'en facturent pas. Ce réglage se change à tout moment.</div>
+            stype = draft.get("structure_type", "company")
+            st.markdown(f"""
+            <div class="ob-title">{TVA_TITLE}</div>
+            <div class="ob-subtitle">{tva_subtitle(stype)}</div>
             """, unsafe_allow_html=True)
 
-            st.markdown("""
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px;">
-                <div style="display: flex; align-items: baseline; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #09090b; font-size: 1.05rem;">🟢 Non, je ne facture pas de TVA</span>
-                    <span style="font-size: 0.8rem; background: #ecfdf5; color: #047857; font-weight: 700; padding: 2px 8px; border-radius: 4px;">Le plus courant</span>
-                </div>
-                <div style="color: #71717a; font-size: 0.88rem; margin-top: 6px;">Vos factures afficheront automatiquement la mention obligatoire « TVA non applicable, art. 293 B du CGI ».</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("Non, je ne facture pas de TVA", key="btn_tva_franchise", use_container_width=True):
-                draft["regime_tva"] = "Franchise en base de TVA (art. 293 B du CGI - exonéré)"
-                st.session_state.ob_step = 4
-                st.rerun()
-
-            st.write("")
-            st.markdown("""
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px;">
-                <div style="display: flex; align-items: baseline; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #09090b; font-size: 1.05rem;">🔵 Oui, 20 % de TVA sur mes prix</span>
-                    <span style="font-size: 0.8rem; background: #eff6ff; color: #1d4ed8; font-weight: 700; padding: 2px 8px; border-radius: 4px;">Déclaration chaque mois</span>
-                </div>
-                <div style="color: #71717a; font-size: 0.88rem; margin-top: 6px;">Vous ajoutez 20 % de TVA à vos prestations et vous récupérez celle de vos achats professionnels.</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("Oui, 20 % de TVA sur mes prix", key="btn_tva_normal", use_container_width=True):
-                draft["regime_tva"] = "Réel normal (20%)"
-                st.session_state.ob_step = 4
-                st.rerun()
-
-            st.write("")
-            st.markdown("""
-            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin-bottom: 12px;">
-                <div style="display: flex; align-items: baseline; justify-content: space-between;">
-                    <span style="font-weight: 700; color: #09090b; font-size: 1.05rem;">🟡 Oui, mais je déclare une fois par an</span>
-                    <span style="font-size: 0.8rem; background: #fef9c3; color: #a16207; font-weight: 700; padding: 2px 8px; border-radius: 4px;">Moins de paperasse</span>
-                </div>
-                <div style="color: #71717a; font-size: 0.88rem; margin-top: 6px;">Vous facturez la TVA et ne la déclarez qu'une seule fois par an.</div>
-            </div>
-            """, unsafe_allow_html=True)
-            if st.button("Oui, mais je déclare une fois par an", key="btn_tva_simplifie", use_container_width=True):
-                draft["regime_tva"] = "Réel simplifié"
-                st.session_state.ob_step = 4
-                st.rerun()
+            choices = tva_choices(stype)
+            for choice in choices:
+                with st.container(border=True):
+                    title_col, badge_col = st.columns([3, 1])
+                    with title_col:
+                        st.markdown(f"**{choice['title']}**")
+                    with badge_col:
+                        if choice.get("badge"):
+                            st.caption(choice["badge"])
+                    st.caption(choice["description"])
+                    if st.button(
+                        "Choisir cette option",
+                        key=f"btn_tva_{choice['key']}",
+                        use_container_width=True,
+                    ):
+                        draft["regime_tva"] = choice["value"]
+                        st.session_state.ob_tva_defaulted = False
+                        st.session_state.ob_step = 4
+                        st.rerun()
 
             st.write("")
             col_b1, col_b2 = st.columns([1, 2])
@@ -539,7 +592,12 @@ if not user_entities or is_adding_entity:
                     st.session_state.ob_step = 2
                     st.rerun()
             with col_b2:
-                if st.button("Passer à l'étape suivante ➔", use_container_width=True):
+                if st.button(
+                    "Je ne sais pas encore : appliquer le choix le plus courant",
+                    use_container_width=True,
+                ):
+                    draft["regime_tva"] = choices[0]["value"]
+                    st.session_state.ob_tva_defaulted = True
                     st.session_state.ob_step = 4
                     st.rerun()
 
@@ -552,42 +610,100 @@ if not user_entities or is_adding_entity:
             <div class="ob-subtitle">Ces informations servent à émettre des devis et des factures prêts à envoyer. Vous pourrez les compléter plus tard.</div>
             """, unsafe_allow_html=True)
 
+            st.caption(
+                f"Structure : {draft.get('name') or 'à compléter'} • "
+                f"{draft.get('legal_form', '')} • TVA : {draft.get('regime_tva', '')} • "
+                f"{draft.get('address', '')} {draft.get('postal_code', '')} {draft.get('city', '')}".strip()
+            )
+            if st.session_state.get("ob_tva_defaulted"):
+                st.info(
+                    "Aucun régime de TVA n'a été choisi : le cas le plus courant pour votre "
+                    "structure a été appliqué. Vous pourrez le modifier dans votre fiche."
+                )
+
             col_p1, col_p2 = st.columns(2)
             with col_p1:
-                draft["president"] = st.text_input("Qui représente la structure ? (Prénom Nom) :", value=draft.get("president", user_fullname))
-                roles = ["Président", "Directeur Général", "Gérant", "Entrepreneur individuel", "Associé gérant", "Titulaire"]
-                curr_role = draft.get("president_role", "Dirigeant")
+                draft["president"] = st.text_input(
+                    "Qui représente la structure ? (Prénom Nom) :",
+                    value=draft.get("president") or user_fullname,
+                    key="ob_president",
+                )
+                curr_role = draft.get("president_role") or "Dirigeant"
+                roles = role_options(curr_role)
                 role_idx = roles.index(curr_role) if curr_role in roles else 0
-                draft["president_role"] = st.selectbox("Quel est son rôle ?", roles, index=role_idx)
+                draft["president_role"] = st.selectbox(
+                    "Quel est son rôle ?", roles, index=role_idx, key="ob_president_role"
+                )
+                imp_options = ["IS", "IR"]
+                imp_labels = {
+                    "IS": "Impôt sur les sociétés (IS)",
+                    "IR": "Impôt sur le revenu (IR)",
+                }
+                imp_idx = imp_options.index(draft.get("regime_imposition", "IS")) if draft.get("regime_imposition") in imp_options else 0
+                draft["regime_imposition"] = st.selectbox(
+                    "Imposition des bénéfices :",
+                    imp_options,
+                    index=imp_idx,
+                    format_func=lambda x: imp_labels[x],
+                    help="La plupart des SAS et SARL relèvent de l'IS. Les micro-entreprises et les SCI relèvent en général de l'IR.",
+                    key="ob_imposition",
+                )
 
             with col_p2:
-                draft["iban"] = st.text_input("IBAN pour recevoir vos paiements (optionnel) :", value=draft.get("iban", ""), placeholder="Ex: FR76 3000 6000 0112 ...")
+                draft["iban"] = st.text_input(
+                    "IBAN pour recevoir vos paiements (optionnel) :",
+                    value=draft.get("iban", ""),
+                    placeholder="Ex : FR76 3000 6000 0112 …",
+                    key="ob_iban",
+                )
+                draft["bic"] = st.text_input(
+                    "BIC de votre banque (optionnel) :",
+                    value=draft.get("bic", ""),
+                    placeholder="Ex : BNPAFRPPXXX",
+                    key="ob_bic",
+                )
                 fiscal_dates = ["31/12", "30/06", "30/09", "31/03"]
                 fye_idx = fiscal_dates.index(draft.get("fiscal_year_end", "31/12")) if draft.get("fiscal_year_end") in fiscal_dates else 0
-                draft["fiscal_year_end"] = st.selectbox("Date de clôture de vos comptes :", fiscal_dates, index=fye_idx)
+                draft["fiscal_year_end"] = st.selectbox(
+                    "Date de clôture de vos comptes :",
+                    fiscal_dates,
+                    index=fye_idx,
+                    key="ob_fiscal_year_end",
+                )
 
             st.write("")
             st.write("")
 
-            if st.button("🚀 Finaliser et activer mon assistant ÉCHAP", type="primary", use_container_width=True):
-                ent_name_val = draft.get("name", "").strip() or f"{user_fullname} ({draft.get('legal_form', 'Structure')})"
-                draft["name"] = ent_name_val
-                draft["company_name"] = ent_name_val
-                draft["representative_name"] = draft.get("president", user_fullname)
-                draft["representative_role"] = draft.get("president_role", "Dirigeant")
-
-                res = create_entity_for_user(user_id, draft, role="owner")
-                if "error" in res:
-                    st.error(res["error"])
+            if st.button("Finaliser et activer mon assistant ÉCHAP", type="primary", use_container_width=True):
+                missing = missing_identity_fields(draft)
+                if missing:
+                    st.error(
+                        "Il manque "
+                        + ", ".join(missing)
+                        + ". Revenez à l'étape précédente pour compléter votre adresse."
+                    )
                 else:
-                    st.session_state.active_entity_id = res["id"]
-                    st.session_state.adding_entity = False
-                    st.session_state.pop("ob_step", None)
-                    st.session_state.pop("ob_draft", None)
-                    st.session_state.pop("ob_results", None)
-                    st.session_state.pop("ob_query", None)
-                    st.success(f"Structure « {ent_name_val} » configurée avec succès ! Lancement...")
-                    st.rerun()
+                    ent_name_val = draft.get("name", "").strip() or f"{user_fullname} ({draft.get('legal_form', 'Structure')})"
+                    draft["name"] = ent_name_val
+                    draft["company_name"] = ent_name_val
+                    draft["representative_name"] = draft.get("president") or user_fullname
+                    draft["representative_role"] = draft.get("president_role", "Dirigeant")
+
+                    res = create_entity_for_user(user_id, draft, role="owner")
+                    if "error" in res:
+                        st.error(res["error"])
+                    else:
+                        st.session_state.active_entity_id = res["id"]
+                        st.session_state.adding_entity = False
+                        st.session_state.pop("ob_step", None)
+                        st.session_state.pop("ob_draft", None)
+                        st.session_state.pop("ob_results", None)
+                        st.session_state.pop("ob_query", None)
+                        st.session_state.pop("ob_last_query", None)
+                        st.session_state.pop("ob_suggestion_nonce", None)
+                        st.session_state.pop("ob_tva_defaulted", None)
+                        st.success(f"Structure « {ent_name_val} » configurée avec succès ! Lancement...")
+                        st.rerun()
 
             col_b1, col_b2 = st.columns([1, 2])
             with col_b1:
@@ -603,6 +719,9 @@ if not user_entities or is_adding_entity:
                 st.session_state.pop("ob_step", None)
                 st.session_state.pop("ob_draft", None)
                 st.session_state.pop("ob_query", None)
+                st.session_state.pop("ob_last_query", None)
+                st.session_state.pop("ob_suggestion_nonce", None)
+                st.session_state.pop("ob_tva_defaulted", None)
                 st.rerun()
         else:
             if st.button("Se déconnecter", type="secondary"):
@@ -610,6 +729,9 @@ if not user_entities or is_adding_entity:
                 st.session_state.pop("ob_step", None)
                 st.session_state.pop("ob_draft", None)
                 st.session_state.pop("ob_query", None)
+                st.session_state.pop("ob_last_query", None)
+                st.session_state.pop("ob_suggestion_nonce", None)
+                st.session_state.pop("ob_tva_defaulted", None)
                 st.rerun()
 
     st.stop()
@@ -1049,7 +1171,12 @@ elif clean_nav == "Outils externes":
             f_addr = st.text_input("Adresse :", value=curr_prof.get("address", ""))
             f_cp = st.text_input("Code postal :", value=curr_prof.get("postal_code", ""))
             f_city = st.text_input("Ville :", value=curr_prof.get("city", ""))
-            all_tvas = ["Réel normal (20%)", "Réel simplifié", "Franchise en base de TVA (art. 293 B du CGI - exonéré)"]
+            all_tvas = [
+                "Réel normal (20%)",
+                "Réel simplifié",
+                "Franchise en base de TVA (art. 293 B du CGI - exonéré)",
+                TVA_EXONERATION_261D,
+            ]
             f_tva = st.selectbox("Régime de TVA :", all_tvas, index=all_tvas.index(curr_prof.get("regime_tva", "Réel normal (20%)")) if curr_prof.get("regime_tva") in all_tvas else 0)
             f_imp = st.radio("Imposition :", ["IS", "IR"], index=0 if curr_prof.get("regime_imposition", "IS") == "IS" else 1, horizontal=True)
             all_fyes = ["31/12", "30/06", "30/09", "31/03"]

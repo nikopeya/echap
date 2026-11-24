@@ -18,13 +18,27 @@ _schema_ready = False
 _schema_lock = threading.Lock()
 
 
-def get_db_connection() -> sqlite3.Connection:
+def get_db_connection():
     """
-    Retourne une connexion à la base de données persistante.
-    Le schéma et les migrations ne sont vérifiés qu'une seule fois par processus,
-    afin que chaque requête reste rapide (surtout sur un disque distant).
+    Retourne une connexion à la base de données persistante :
+    - PostgreSQL (Neon Lakebase) si DATABASE_URL est défini
+    - SQLite local par défaut
+    Le schéma et les migrations ne sont vérifiés qu'une seule fois par processus.
     """
     global _schema_ready
+    db_url = os.environ.get("DATABASE_URL") or os.environ.get("DATABASE_URL_UNPOOLED", "")
+    if db_url.startswith("postgresql://") or db_url.startswith("postgres://"):
+        import psycopg2
+        from packages.paperasse.neon_adapter import NeonConnection
+        raw_conn = psycopg2.connect(db_url)
+        conn = NeonConnection(raw_conn)
+        if not _schema_ready:
+            with _schema_lock:
+                if not _schema_ready:
+                    _init_neon_schema(conn)
+                    _schema_ready = True
+        return conn
+
     os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=20)
     conn.row_factory = sqlite3.Row
@@ -39,6 +53,122 @@ def get_db_connection() -> sqlite3.Connection:
                 _init_schema()
                 _schema_ready = True
     return conn
+
+
+def _init_neon_schema(conn) -> None:
+    """Crée et initialise les tables requises sur Neon Postgres (exécuté 1 fois par processus)."""
+    with conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username TEXT UNIQUE NOT NULL,
+                company_name TEXT NOT NULL,
+                salt TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                full_name TEXT DEFAULT ''
+            );
+            CREATE TABLE IF NOT EXISTS entities (
+                id SERIAL PRIMARY KEY,
+                name TEXT NOT NULL,
+                structure_type TEXT NOT NULL DEFAULT 'company',
+                legal_form TEXT DEFAULT 'SAS',
+                siren TEXT DEFAULT '',
+                siret TEXT DEFAULT '',
+                address TEXT DEFAULT '',
+                postal_code TEXT DEFAULT '',
+                city TEXT DEFAULT '',
+                activity_code TEXT DEFAULT '',
+                activity_label TEXT DEFAULT '',
+                regime_tva TEXT DEFAULT 'Réel normal (20%)',
+                regime_imposition TEXT DEFAULT 'IS',
+                fiscal_year_end TEXT DEFAULT '31/12',
+                iban TEXT DEFAULT '',
+                bic TEXT DEFAULT '',
+                representative_name TEXT DEFAULT '',
+                representative_role TEXT DEFAULT 'Dirigeant',
+                onboarding_completed INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS memberships (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                entity_id INTEGER NOT NULL,
+                role TEXT NOT NULL DEFAULT 'owner',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, entity_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS chat_messages (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                entity_id INTEGER DEFAULT NULL,
+                role TEXT NOT NULL,
+                content TEXT NOT NULL,
+                interactive_question TEXT DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS documents (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                entity_id INTEGER DEFAULT NULL,
+                kind TEXT NOT NULL,
+                filename TEXT NOT NULL,
+                content_blob BYTEA NOT NULL,
+                size_kb REAL NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS company_finances (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER,
+                entity_id INTEGER,
+                ca_ytd REAL DEFAULT 0.0,
+                ca_month REAL DEFAULT 0.0,
+                tresorerie REAL DEFAULT 0.0,
+                creances_clients REAL DEFAULT 0.0,
+                tva_due REAL DEFAULT 0.0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS company_profiles (
+                user_id INTEGER PRIMARY KEY,
+                legal_form TEXT DEFAULT 'SAS',
+                siren TEXT DEFAULT '',
+                siret TEXT DEFAULT '',
+                address TEXT DEFAULT '',
+                postal_code TEXT DEFAULT '',
+                city TEXT DEFAULT '',
+                activity_code TEXT DEFAULT '',
+                activity_label TEXT DEFAULT '',
+                regime_tva TEXT DEFAULT 'Réel normal (20%)',
+                regime_imposition TEXT DEFAULT 'IS',
+                fiscal_year_end TEXT DEFAULT '31/12',
+                iban TEXT DEFAULT '',
+                bic TEXT DEFAULT '',
+                president TEXT DEFAULT '',
+                president_role TEXT DEFAULT 'Président',
+                onboarding_completed INTEGER DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE TABLE IF NOT EXISTS company_deadlines (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                entity_id INTEGER DEFAULT NULL,
+                label TEXT NOT NULL,
+                date TEXT NOT NULL,
+                urgency TEXT NOT NULL,
+                statut TEXT NOT NULL,
+                montant TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+        """)
 
 
 def _init_schema() -> None:
@@ -381,9 +511,10 @@ def register_user(username: str, password_or_company: str, password: Optional[st
                 "full_name": name,
                 "company_name": comp_name
             }
-    except sqlite3.IntegrityError:
-        return {"error": f"L'identifiant « {clean_username} » est déjà utilisé."}
     except Exception as e:
+        err_msg = str(e)
+        if "unique" in err_msg.lower() or "integrity" in err_msg.lower() or "already exists" in err_msg.lower():
+            return {"error": f"L'identifiant « {clean_username} » est déjà utilisé."}
         return {"error": f"Erreur lors de la création : {e}"}
     finally:
         if conn:
@@ -671,13 +802,28 @@ def get_company_finances(user_id: int, entity_id: Optional[int] = None) -> Dict[
     return finances
 
 
-# --- GESTION DES DOCUMENTS ET PIÈCES (BLOBS) ---
+# --- GESTION DES DOCUMENTS ET PIÈCES (OBJECT STORAGE NEON S3 & BASE) ---
 
 def save_document(user_id: int, filename: str, content_bytes: bytes, kind: str = "upload") -> Dict[str, Any]:
-    """Enregistre un document en base binaire."""
+    """Enregistre un document sur Neon Object Storage (S3) si configuré, avec fallback/métadonnées en base."""
     size_kb = round(len(content_bytes) / 1024, 1)
     conn = None
     try:
+        from packages.paperasse.neon_adapter import get_s3_storage_client
+        s3 = get_s3_storage_client()
+        s3_key = f"tenants/{user_id}/{kind}/{filename}"
+
+        # Si Neon S3 Object Storage est configuré, on upload sur le bucket
+        if s3:
+            try:
+                s3.put_object(
+                    Bucket="documents",
+                    Key=s3_key,
+                    Body=content_bytes
+                )
+            except Exception as s3_err:
+                print(f"[NEON S3 UPLOAD WARNING] {s3_err}")
+
         conn = get_db_connection()
         with conn:
             cursor = conn.cursor()
@@ -805,13 +951,26 @@ def create_and_record_invoice(user_id: int, invoice_data: Dict[str, Any]) -> Dic
     filename = f"{num}_{safe_client}.md"
     size_kb = round(len(file_bytes) / 1024, 1)
 
-    # 4. Enregistrement du document dans les exports téléchargeables
+    # 4. Enregistrement sur Neon Object Storage (S3) si disponible
+    from packages.paperasse.neon_adapter import get_s3_storage_client
+    s3 = get_s3_storage_client()
+    if s3:
+        try:
+            s3.put_object(
+                Bucket="documents",
+                Key=f"tenants/{user_id}/export/{filename}",
+                Body=file_bytes
+            )
+        except Exception as s3_err:
+            print(f"[NEON S3 INVOICE UPLOAD WARNING] {s3_err}")
+
+    # 5. Enregistrement du document dans les exports téléchargeables
     cursor.execute(
         "INSERT INTO documents (user_id, kind, filename, content_blob, size_kb) VALUES (?, 'export', ?, ?, ?)",
         (user_id, filename, file_bytes, size_kb)
     )
 
-    # 5. Actualisation des finances (créances clients + tva due)
+    # 6. Actualisation des finances (créances clients + tva due)
     cursor.execute(
         "UPDATE company_finances SET creances_clients = creances_clients + ?, tva_due = tva_due + ? WHERE user_id = ?",
         (montant_ttc, montant_tva, user_id)
@@ -832,21 +991,46 @@ def create_and_record_invoice(user_id: int, invoice_data: Dict[str, Any]) -> Dic
 
 
 def get_document_content(user_id: int, doc_id: int) -> Optional[tuple[str, bytes]]:
-    """Récupère le contenu d'un document pour téléchargement."""
+    """Récupère le contenu d'un document (d'abord depuis Neon Object Storage S3 si présent, sinon depuis la base)."""
     conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT filename, content_blob FROM documents WHERE id = ? AND user_id = ?",
+            "SELECT filename, kind, content_blob FROM documents WHERE id = ? AND user_id = ?",
             (doc_id, user_id)
         )
         row = cursor.fetchone()
-        if row:
-            return row["filename"], row["content_blob"]
-        return None
+        if not row:
+            return None
+
+        filename = row["filename"]
+        kind = row.get("kind", "upload") if isinstance(row, dict) or hasattr(row, "get") else "upload"
+
+        # Essai de récupération via S3 Object Storage en priorité
+        from packages.paperasse.neon_adapter import get_s3_storage_client
+        s3 = get_s3_storage_client()
+        if s3:
+            try:
+                s3_key = f"tenants/{user_id}/{kind}/{filename}"
+                obj = s3.get_object(Bucket="documents", Key=s3_key)
+                content = obj["Body"].read()
+                if content:
+                    return filename, content
+            except Exception:
+                pass
+
+        # Fallback sur le blob de la base de données
+        blob = row["content_blob"]
+        if isinstance(blob, memoryview):
+            blob = blob.tobytes()
+        return filename, bytes(blob)
     except Exception as e:
         print(f"[DOC GET ERROR] {e}")
+        return None
+    finally:
+        if conn:
+            conn.close()
 # --- STRUCTURES / ENTITÉS & MULTI-ENTITÉS ---
 
 def get_user_entities(user_id: int) -> List[Dict[str, Any]]:
@@ -989,6 +1173,8 @@ def create_entity_for_user(user_id: int, entity_data: Dict[str, Any], role: str 
                 deadlines.append(("Télédéclaration TVA CA3 (Mois précédent)", "19/12/2026", "Urgent", "À valider", "Selon CA"))
             elif "Réel simplifié" in tva:
                 deadlines.append(("Acompte semestriel TVA (Formulaire 3514)", "15/07/2027", "À venir", "Prévu", "Selon CA N-1"))
+            elif "261" in tva:
+                deadlines.append(("TVA - Location nue exonérée (art. 261 D CGI)", "Permanente", "À jour", "Exonéré", "0 € (Pas de déclaration de TVA)"))
             else:
                 deadlines.append(("Franchise en base de TVA (art. 293 B CGI)", "Permanente", "À jour", "Exonéré", "0 € (Pas de déclaration mensuelle)"))
 
@@ -1105,6 +1291,8 @@ def update_entity_profile(entity_id: int, profile_data: Dict[str, Any]):
                     deadlines.append(("Télédéclaration TVA CA3 (Mois précédent)", "19/12/2026", "Urgent", "À valider", "Selon CA"))
                 elif "Réel simplifié" in tva:
                     deadlines.append(("Acompte semestriel TVA (Formulaire 3514)", "15/07/2027", "À venir", "Prévu", "Selon CA N-1"))
+                elif "261" in tva:
+                    deadlines.append(("TVA - Location nue exonérée (art. 261 D CGI)", "Permanente", "À jour", "Exonéré", "0 € (Pas de déclaration de TVA)"))
                 else:
                     deadlines.append(("Franchise en base de TVA (art. 293 B CGI)", "Permanente", "À jour", "Exonéré", "0 € (Pas de déclaration mensuelle)"))
 
